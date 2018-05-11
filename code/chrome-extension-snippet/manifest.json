@@ -1,0 +1,42 @@
+{
+  "name": "Snippet",
+  "version": "1.0",
+  "description": "Highlight hovered text!",
+  "permissions": [
+    "activeTab",
+    "declarativeContent",
+    "storage"
+  ],
+  "options_page": "options.html",
+  "web_accessible_resources": [
+    "images/*.png"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "jquery-3.3.1.min.js",
+        "jquery.mark.min.js",
+        "content.js"
+      ]
+    }
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "page_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "32": "images/snippet_32.png"
+    }
+  },
+  "icons": {
+    "32": "images/snippet_32.png"
+  },
+  "manifest_version": 2
+}
