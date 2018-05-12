@@ -1,29 +1,4 @@
 ===UCLA===
-PostId: 139
-Score: 10
-Accepted: 0
-ViewCount: 7891
-Tags: <java><php><oop><theory>
-<blockquote>
-  <p>Am I just going overboard here?</p>
-</blockquote>
-
-<p>Perhaps ;)</p>
-
-<p>Another approach would be to utilize a private/protected method to actually do the getting (caching/db/etc), and a public wrapper for it that increments the count:</p>
-
-<p>PHP:</p>
-
-<pre><code>public function getName() {<br>    $this-&gt;incrementNameCalled();<br>    return $this-&gt;_getName();<br>}<br><br>protected function _getName() {<br>    return $this-&gt;name;<br>}<br></code></pre>
-
-<p>and then from within the object itself:</p>
-
-<p>PHP:</p>
-
-<pre><code>$name = $this-&gt;_getName();<br></code></pre>
-
-<p>This way you can still use that first argument for something else (like sending a flag for whether or not to used cached data here perhaps). </p>
-===UCLA===
 PostId: 384
 Score: 39
 Accepted: 1
@@ -87,27 +62,6 @@ Tags: <c#><java><integer><int>
 <p>Personally I prefer int, string, double, etc. because they don't require a <code>using System;</code> statement :) A silly reason, I know...</p>
 
 ===UCLA===
-PostId: 608
-Score: 27
-Accepted: 0
-ViewCount: 145094
-Tags: <c#><java><integer><int>
-<p>I'll add to the excellent answers given above, and talk about boxing and unboxing, and how this applies to Java (although C# has it too). I'll use just Java terminology, because I am more <em>au fait</em> with that.</p>
-
-<p>As the answers mentioned, <code>int</code> is just a number (called the <em>unboxed</em> type), whereas <code>Integer</code> is an object (which contains the number, hence a <em>boxed</em> type). In Java terms, that means (apart from not being able to call methods on <code>int</code>), you cannot store <code>int</code> or other non-object types in collections (<code>List</code>, <code>Map</code>, etc.). In order to store them, you must first box them up in its corresponding boxed type.</p>
-
-<p>Java 5 onwards have something called <em>auto-boxing</em> and <em>auto-unboxing</em> which allow the boxing/unboxing to be done behind the scenes. Compare and contrast: Java 5 version:</p>
-
-<pre><code>Deque&lt;Integer&gt; queue;<br><br>void add(int n) {<br>    queue.add(n);<br>}<br><br>int remove() {<br>    return queue.remove();<br>}<br></code></pre>
-
-<p>Java 1.4 or earlier (no generics either):</p>
-
-<pre><code>Deque queue;<br><br>void add(int n) {<br>    queue.add(Integer.valueOf(n));<br>}<br><br>int remove() {<br>    return ((Integer) queue.remove()).intValue();<br>}<br></code></pre>
-
-<p>It must be noted that despite the brevity in the Java 5 version, both versions generate identical bytecode. Thus, although auto-boxing and auto-unboxing is very convenient because you write less code, these operations <em>do</em> happen behind the scenes, with the same runtime costs, so you still have to be aware of their existence.</p>
-
-<p>Hope this helps!</p>
-===UCLA===
 PostId: 1266
 Score: 20
 Accepted: 0
@@ -140,17 +94,6 @@ Tags: <c#><java><integer><int>
 
 <p>this will create a boxed copy of the contents of <code>i</code> on the heap. In IL you can access methods on the heap object directly, but in C# you need to cast it back to an int, which will create another copy. Thus, the object on the heap cannot easily be changed in C# without creating a new boxed copy of a new int value. (Ugh, this paragraph doesn't read all that easily.)</p>
 
-===UCLA===
-PostId: 1582
-Score: 4
-Accepted: 0
-ViewCount: 145094
-Tags: <c#><java><integer><int>
-<p>This has already been answered for Java, here's the C# answer:</p>
-
-<p>"Integer" is not a valid type name in C# and "int" is just an alias for System.Int32. Also, unlike in Java (or C++) there aren't any special primitive types in C#, every instance of a type in C# (including int) is an object. Here's some demonstrative code:</p>
-
-<pre><code>void DoStuff()<br>{<br>    System.Console.WriteLine( SomeMethod((int)5) );<br>    System.Console.WriteLine( GetTypeName&lt;int&gt;() );<br>}<br><br>string SomeMethod(object someParameter)<br>{<br>    return string.Format("Some text {0}", someParameter.ToString());<br>}<br><br>string GetTypeName&lt;T&gt;()<br>{<br>    return (typeof (T)).FullName;<br>}<br></code></pre>
 ===UCLA===
 PostId: 2210
 Score: 9
@@ -292,47 +235,6 @@ public class MyButton extends JButton {
 <a href="http://wayback.archive.org/web/20090309070901/http://java.sun.com/products/jfc/tsc/articles/sce/index.html">Creating a Custom Look and Feel</a></p>
 
 ===UCLA===
-PostId: 2245
-Score: 74
-Accepted: 1
-ViewCount: 77247
-Tags: <java><swing><jbutton>
-<p>When I was first learning Java we had to make Yahtzee and I thought it would be cool to create custom Swing components and containers instead of just drawing everything on one JPanel.  The benefit of extending Swing components, of course, is to have the ability to add support for keyboard shortcuts and other accessibility features that you can't do just by having a paint() method print a pretty picture.  It may not be done the best way however, but it may be a good starting point for you.</p>
-
-<p>Edit 8/6 - If it wasn't apparent from the images, each Die is a button you can click. This will move it to the DiceContainer below.  Looking at the source code you can see that each Die button is drawn dynamically, based on its value.</p>
-
-<p><img src="http://i.stack.imgur.com/pgyQp.jpg" alt="alt text"><br>
-<img src="http://i.stack.imgur.com/jkYRd.jpg" alt="alt text"><br>
-<img src="http://i.stack.imgur.com/9BI34.jpg" alt="alt text"></p>
-
-<p>Here are the basic steps:</p>
-
-<ol>
-<li>Create a class that extends JComponent</li>
-<li>Call parent constructor super() in your constructors</li>
-<li>Make sure you class implements MouseListener</li>
-<li><p>Put this in the constructor:</p>
-
-<pre><code>enableInputMethods(true);   
-addMouseListener(this);
-</code></pre></li>
-<li><p>Override these methods:</p>
-
-<pre><code>public Dimension getPreferredSize()  
-public Dimension getMinimumSize()  
-public Dimension getMaximumSize()
-</code></pre></li>
-<li><p>Override this method:</p>
-
-<pre><code>public void paintComponent(Graphics g)
-</code></pre></li>
-</ol>
-
-<p>The amount of space you have to work with when drawing your button is defined by getPreferredSize(), assuming getMinimumSize() and getMaximumSize() return the same value.  I haven't experimented too much with this but, depending on the layout you use for your GUI your button could look completely different.</p>
-
-<p>And finally, the <a href="https://github.com/kdeloach/labs/blob/master/java/yahtzee/src/Dice.java">source code</a>.  In case I missed anything.  </p>
-
-===UCLA===
 PostId: 2823
 Score: 14
 Accepted: 0
@@ -359,19 +261,6 @@ Tags: <c#><java><integer><int>
 <pre><code>System.out.println(i1.equals(i2)); //  true<br></code></pre>
 
 <p>More info at <a href="http://today.java.net/pub/a/today/2005/03/24/autoboxing.html">java.net</a> Example at <a href="http://bexhuff.com/2006/11/java-1-5-autoboxing-wackyness">bexhuff.com</a></p>
-===UCLA===
-PostId: 2971
-Score: 1
-Accepted: 0
-ViewCount: 49952
-Tags: <java><string><parsing>
-<p>A simple string tokenizer on spaces should work, but there are really many ways you could do this.</p>
-
-<p>Here is an example using a tokenizer:</p>
-
-<pre><code>String command = "kick person";<br>StringTokenizer tokens = new StringTokenizer(command);<br>String action = null;<br><br>if (tokens.hasMoreTokens()) {<br>    action = tokens.nextToken();<br>}<br><br>if (action != null) {<br>    doCommand(action, tokens);<br>}<br></code></pre>
-
-<p>Then tokens can be further used for the arguments.  This all assumes no spaces are used in the arguments... so you might want to roll your own simple parsing mechanism (like getting the first whitespace and using text before as the action, or using a regular expression if you don't mind the speed hit), just abstract it out so it can be used anywhere.</p>
 ===UCLA===
 PostId: 3285
 Score: 13
@@ -506,60 +395,6 @@ Tags: <java><autoboxing>
 
 <p>It saves an allocation or two and is more readable.</p>
 
-===UCLA===
-PostId: 4384
-Score: 6
-Accepted: 0
-ViewCount: 5448
-Tags: <java><autoboxing>
-<blockquote>
-  <p>seems like a shortcoming of the
-  specification to me</p>
-</blockquote>
-
-<p>There are more shortcomings and this is a subtle topic. Check <a href="http://kiranthakkar.blogspot.com/2007/05/method-overloading-with-new-features-of.html">this</a> out:</p>
-
-<pre><code>public class methodOverloading{<br>   public static void hello(Integer x){<br>      System.out.println("Integer");<br>   }<br><br>   public static void hello(long x){<br>      System.out.println("long");<br>   }<br><br>   public static void main(String[] args){<br>      int i = 5;<br>      hello(i);<br>   }<br>}<br></code></pre>
-
-<p>Here "long" would be printed (haven't checked it myself), because the compiler choses widening over autoboxing. Be careful when using autoboxing or don't use it at all!</p>
-===UCLA===
-PostId: 4498
-Score: 3
-Accepted: 0
-ViewCount: 25814
-Tags: <java><file><file-io>
-<p>The answer seems to be "no" ... and "yes". There seems to be no real way to know if a file is open for writing by another application. So, reading from such a file will just progress until content is exhausted. I took Mike's advice and wrote some test code:</p>
-
-<p>Writer.java writes a string to file and then waits for the user to hit enter before writing another line to file. The idea being that it could be started up, then a reader can be started to see how it copes with the "partial" file. The reader I wrote is in Reader.java.</p>
-
-<p><strong>Writer.java</strong></p>
-
-<pre><code>public class Writer extends Object<br>{<br>    Writer () {<br><br>    }<br><br>    public static String[] strings = <br>        {<br>            "Hello World", <br>            "Goodbye World"<br>        };<br><br>    public static void main(String[] args) <br>        throws java.io.IOException {<br><br>        java.io.PrintWriter pw =<br>            new java.io.PrintWriter(new java.io.FileOutputStream("out.txt"), true);<br><br>        for(String s : strings) {<br>            pw.println(s);<br>            System.in.read();<br>        }<br><br>        pw.close();<br>    }<br>}<br></code></pre>
-
-<p><strong>Reader.java</strong></p>
-
-<pre><code>public class Reader extends Object<br>{<br>    Reader () {<br><br>    }<br><br>    public static void main(String[] args) <br>        throws Exception {<br><br>        java.io.FileInputStream in = new java.io.FileInputStream("out.txt");<br><br>        java.nio.channels.FileChannel fc = in.getChannel();<br>        java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(10);<br><br>        while(fc.read(bb) &gt;= 0) {<br>            bb.flip();<br>            while(bb.hasRemaining()) {<br>                System.out.println((char)bb.get());<br>            }<br>            bb.clear();<br>        }<br><br>        System.exit(0);<br>    }<br>}<br></code></pre>
-
-<p>No guarantees that this code is best practice.</p>
-
-<p>This leaves the option suggested by Mike of periodically checking if there is new data to be read from the file. This then requires user intervention to close the file reader when it is determined that the reading is completed. Or, the reader needs to be made aware the content of the file and be able to determine and end of write condition. If the content were XML, the end of document could be used to signal this.</p>
-===UCLA===
-PostId: 5091
-Score: 12
-Accepted: 1
-ViewCount: 3582
-Tags: <java><primitive><autoboxing>
-<p>In the first case, you have a widening conversion happening. This can be see when runinng the "javap" utility program (included w/ the JDK), on the compiled class:</p>
-
-<pre><code>public static void main(java.lang.String[]);<br>  Code:<br>   0:   iconst_ 5<br>   1:   istore_ 1<br>   2:   iload_ 1<br>   3:   i2l<br>   4:   invokestatic    #6; //Method hello:(J)V<br>   7:   return<br><br>}<br></code></pre>
-
-<p>Clearly, you see the I2L, which is the mnemonic for the widening Integer-To-Long bytecode instruction. See reference <a href="http://java.sun.com/docs/books/jvms/second_edition/html/Instructions2.doc6.html">here</a>.</p>
-
-<p>And in the other case, replacing the "long x" with the object "Long x" signature, you'll have this code in the main method:</p>
-
-<pre><code>public static void main(java.lang.String[]);<br>  Code:<br>   0:   iconst_ 5<br>   1:   istore_ 1<br>   2:   iload_ 1<br>   3:   invokestatic    #6; //Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;<br>   6:   invokestatic    #7; //Method hello:(Ljava/lang/Integer;)V<br>   9:   return<br><br>}<br></code></pre>
-
-<p>So you see the compiler has created the instruction Integer.valueOf(int), to box the primitive inside the wrapper.</p>
 ===UCLA===
 PostId: 5164
 Score: 1
@@ -747,61 +582,6 @@ Tags: <java><exception><null><nullpointerexception><illegalargumentexception>
 </code></pre>
 
 <p>You have virtually no reason to implicitly use the "NullPointerException". The NullPointerException is an exception thrown by the Java Virtual Machine when you try to execute code on null reference (Like <em>toString()</em>).</p>
-
-===UCLA===
-PostId: 11042
-Score: 38
-Accepted: 0
-ViewCount: 68214
-Tags: <java><http><servlets>
-<p>Here's a simple example. I didn't get fancy with the html or the servlet, but you should get the idea.</p>
-
-<p>I hope this helps you out.</p>
-
-<pre><code>&lt;html&gt;
-&lt;body&gt;
-&lt;form method="post" action="/myServlet"&gt;
-&lt;input type="text" name="username" /&gt;
-&lt;input type="password" name="password" /&gt;
-&lt;input type="submit" /&gt;
-&lt;/form&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
-<p>Now for the Servlet</p>
-
-<pre><code>import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-
-public class MyServlet extends HttpServlet {
-  public void doPost(HttpServletRequest request,
-                    HttpServletResponse response)
-      throws ServletException, IOException {
-
-    String userName = request.getParameter("username");
-    String password = request.getParameter("password");
-    ....
-    ....
-  }
-}
-</code></pre>
-
-===UCLA===
-PostId: 11101
-Score: 16
-Accepted: 1
-ViewCount: 23359
-Tags: <java><byte><unsigned><signed>
-<p>When reading any single value from the array copy it into something like a short or an int and manually convert the negative number into the positive value it should be.</p>
-
-<pre><code>byte[] foobar = ..;
-int value = foobar[10];
-if (value &lt; 0) value += 256 // Patch up the 'falsely' negative value
-</code></pre>
-
-<p>You can do a similar conversion when writing into the array.</p>
 
 ===UCLA===
 PostId: 12030
@@ -1014,37 +794,6 @@ interface UserMap
 <p>And please, read the documentation of <a href="http://java.sun.com/javase/6/docs/api/java/util/Hashtable.html">Hashtable</a> before using it. This class is synchronized which means that each call is protected against multithreading which really slows the access when you don't need the extra protection. Please use any <a href="http://java.sun.com/javase/6/docs/api/java/util/Map.html">Map</a> implementation instead like <a href="http://java.sun.com/javase/6/docs/api/java/util/HashMap.html">HashMap</a> or <a href="http://java.sun.com/javase/6/docs/api/java/util/TreeMap.html">TreeMap</a>.</p>
 
 ===UCLA===
-PostId: 12923
-Score: 4
-Accepted: 0
-ViewCount: 848
-Tags: <java><php><jsp><tomcat>
-<p>It seems like everyone is trying to find the Java way to do it like you're doing it in PHP, instead of the way it ought to be done in Java. Just consider each piece of your array an object, or, at the very least, the first level of the array as an object and each sub level as variables inside the object. The build a data structure that you populate with said objects and access the objects through the data structure's given accessors.</p>
-
-<p>Something like:</p>
-
-<pre><code>class Schedule
-{
-  private String group;
-  private String season;
-  private String rundays;
-  public Schedule() { this.group = null; this.season = null; this.rundays= null; }
-  public void setGroup(String g) { this.group = g; }
-  public String getGroup() { return this.group; }
-  ...
-}
-
-public ArrayList&lt;Schedule&gt; schedules = new ArrayList&lt;Schedule&gt;();
-Schedule s = new Schedule();
-s.setGroup(...);
-...
-schedules.add(s);
-...
-</code></pre>
-
-<p>Of course that probably isn't right either. I'd make each season an object, and maybe each weekday list as an object too. Anyway, its more easily reused, understood, and extensible than a hobbled-together Hashtable that tries to imitate your PHP code. Of course, PHP has objects too, and you should use them in a similar fashion instead of your uber-arrays, wherever possible. I do understand the temptation to cheat, though. PHP makes it so easy, and so fun!</p>
-
-===UCLA===
 PostId: 12932
 Score: 0
 Accepted: 0
@@ -1086,23 +835,6 @@ Tags: <java><php><jsp><tomcat>
 </code></pre>
 
 <p>You lose some readability but at least the data is closer to where it's going to be used.</p>
-
-===UCLA===
-PostId: 13037
-Score: 3
-Accepted: 0
-ViewCount: 848
-Tags: <java><php><jsp><tomcat>
-<p>Here's one way it <em>could</em> look like, you can figure the rest out:</p>
-
-<pre><code>A = new Group();
-A.getSeason(Seasons.WINTER).addDay(Days.MONDAY);
-A.getSeason(Seasons.SPRING).addDay(Days.TUESDAY).addDay(Days.THURSDAY);
-A.getSeason(Seasons.SPRING).addDays(Days.MONDAY, Days.TUESDAY, ...);
-
-schedule = new Schedule();
-schedule.addWateringGroup( A );
-</code></pre>
 
 ===UCLA===
 PostId: 13099
@@ -1182,66 +914,6 @@ client.put(filePath);
 //disconnect
 client.quit();
 ssh.disconnect();
-</code></pre>
-
-===UCLA===
-PostId: 15279
-Score: 2
-Accepted: 1
-ViewCount: 3528
-Tags: <java><generics><inheritance><java-ee><ejb-3.0>
-<p>I tried it with a pojo and it seems to work. I had to modify your code a bit.
-I think your interfaces were a bit off, but I'm not sure.</p>
-
-<p>I assumed "Foo" was a concrete type, but if not I can do some more testing for you.</p>
-
-<p>I just wrote a main method to test this.
-I hope this helps!</p>
-
-<pre><code>public static void main(String[] args){
-     FooRepository fooRepository = new FooRepositoryImpl();
-     fooRepository.delete(new Foo("Bar"));
-}
-
-public class Foo
-{
-    private String value;
-
-    public Foo(String inValue){
-     super();
-     value = inValue;
-    }
-    public String toString(){
-     return value;
-    }
-}
-
-public interface Repository&lt;E&gt;
-{
-    public void delete(E entity);
-}
-
-public interface FooRepository extends Repository&lt;Foo&gt;
-{
-    //other methods
-}
-
-public class AbstractRespository&lt;E&gt; implements Repository&lt;E&gt;
-{
-    public void delete(E entity){
-     System.out.println("Delete-" + entity.toString());
-    }
-}
-
-public class FooRepositoryImpl extends AbstractRespository&lt;Foo&gt; implements FooRepository
-{
-     @Override
-       public void delete(Foo entity){
-          //do something before deleting the entity
-       System.out.println("something before");
-          super.delete(entity);
-       }
-}
 </code></pre>
 
 ===UCLA===
@@ -1395,76 +1067,6 @@ Tags: <java><refactoring><label>
 </code></pre>
 
 ===UCLA===
-PostId: 15870
-Score: 0
-Accepted: 0
-ViewCount: 1562
-Tags: <java><refactoring><label>
-<p>Does this work for you? I extracted the inner loop into a method CheckedEntireMatrix (you can name it better than me) - Also my java is a bit rusty.. but I think it gets the message across</p>
-
-<pre><code>for( int idx = 0; idx &lt; vectorLength; idx++) {
-    if( conditionAtVectorPosition( v, idx ) 
-    || !CheckedEntireMatrix(v)) continue;
-
-    setValueInVector( v, idx );
-}
-
-private bool CheckedEntireMatrix(Vector v)
-{
-    for( rowIdx = 0; rowIdx &lt; n; rowIdx++ ) {
-        if( anotherConditionAtVector( v, rowIdx ) ) continue;
-        if( conditionAtMatrixRowCol( m, rowIdx, idx ) ) return false;
-    }   
-    return true;
-}
-</code></pre>
-
-===UCLA===
-PostId: 15901
-Score: 0
-Accepted: 0
-ViewCount: 1562
-Tags: <java><refactoring><label>
-<p>Gishu has the right idea :</p>
-
-<pre><code>for( int idx = 0; idx &lt; vectorLength; idx++) {
-    if (!conditionAtVectorPosition( v, idx ) 
-        &amp;&amp; checkedRow(v, idx))
-         setValueInVector( v, idx );
-}
-
-private boolean checkedRow(Vector v, int idx) {
-    for( rowIdx = 0; rowIdx &lt; n; rowIdx++ ) {
-        if( anotherConditionAtVector( v, rowIdx ) ) continue;
-        if( conditionAtMatrixRowCol( m, rowIdx, idx ) ) return false;
-    }  
-    return true;
-}
-</code></pre>
-
-===UCLA===
-PostId: 15903
-Score: 0
-Accepted: 0
-ViewCount: 1562
-Tags: <java><refactoring><label>
-<p>I'm not too sure to understand the first continue.
-I would copy Gishu and write something like ( sorry if there are some mistakes ) :</p>
-
-<pre><code>for( int idx = 0; idx &lt; vectorLength; idx++) {
-    if( !conditionAtVectorPosition( v, idx ) &amp;&amp; CheckedEntireMatrix(v))
-        setValueInVector( v, idx );
-}
-
-inline bool CheckedEntireMatrix(Vector v) {
-    for(rowIdx = 0; rowIdx &lt; n; rowIdx++)
-        if ( !anotherConditionAtVector(v,rowIdx) &amp;&amp; conditionAtMatrixRowCol(m,rowIdx,idx) ) 
-            return false;
-    return true;
-}
-</code></pre>
-
-===UCLA===
 PostId: 15937
 Score: 147
 Accepted: 1
@@ -1510,113 +1112,6 @@ InputStream in = sftpChannel.get( "remote-file" );
 sftpChannel.exit();
 session.disconnect();
 </code></pre>
-
-===UCLA===
-PostId: 15939
-Score: 32
-Accepted: 0
-ViewCount: 19925
-Tags: <java><label><convention>
-<p>I don't understand where this "don't use labels" rule comes from. When doing non-trivial looping logic, the test to break or continue isn't always neatly at the end of the surrounding block.</p>
-
-<pre><code>outer_loop:
-for (...) {
-  //  some code
-  for (...) {
-    //  some code
-    if (...)
-      continue outer_loop;
-    //  more code
-  }
-  //  more code
-}
-</code></pre>
-
-<p>Yes, cases like this do happen all the time. What are people suggesting I use instead? A boolean condition like this?</p>
-
-<pre><code>for (...) {
-  //  some code
-  boolean continueOuterLoop = false;
-  for (...) {
-    //  some code
-    if (...) {
-      continueOuterLoop = true;
-      break;
-    }
-    //  more code
-  }
-  if (continueOuterLoop)
-    continue;
-  //  more code
-}
-</code></pre>
-
-<p><strong>Yuck!</strong>  Refactoring it as a method doesn't alleviate that either:</p>
-
-<pre><code>boolean innerLoop (...) {
-  for (...) {
-    //  some code
-    if (...) {
-      return true;
-    }
-    //  more code
-  }
-  return false;
-}
-
-for (...) {
-  //  some code
-  if (innerLoop(...))
-    continue;
-  //  more code
-}
-</code></pre>
-
-<p>Sure it's a little prettier, but it's still passing around a superfluous boolean. And if the inner loop modified local variables, refactoring it into a method isn't always the correct solution.</p>
-
-<p>So why are you all against labels? Give me some solid reasons, and practical alternatives for the above case.</p>
-
-===UCLA===
-PostId: 15944
-Score: 1
-Accepted: 0
-ViewCount: 19925
-Tags: <java><label><convention>
-<p>wrt <a href="http://stackoverflow.com/questions/15481/java-coding-standard-best-practices-labeled-brakecontinue#15939" rel="nofollow">sadie's code example</a>:</p>
-
-<p>You gave </p>
-
-<pre><code>outerloop:
-for (...) {
-  //  some code
-  for (...) {
-    //  some code
-    if (...)
-      continue outerloop;
-    //  more code
-  }
-  //  more code
-}
-</code></pre>
-
-<p>As an example. You make a good point. My best guess would be:</p>
-
-<pre><code>public void lookMumNoLabels() {
-  for (...) {
-    // some code
-    doMoreInnerCodeLogic(...);
-  }
-}
-
-private void doMoreInnerCodeLogic(...) {
-   for (...) {
-      // some code
-      if (...) return;
-   }
-}
-</code></pre>
-
-<p>But there would be examples where that kind of refactoring doesn't sit correctly with whatever logic you're doing.</p>
 
 ===UCLA===
 PostId: 15967
@@ -1696,39 +1191,6 @@ for (int i=0 ; i &lt; customDataNodeSet.getLength() ; i++) {
   return (NodeList) expression.evaluate( obj, XPathConstants.NODESET );
 }
 </code></pre>
-
-===UCLA===
-PostId: 16054
-Score: 222
-Accepted: 1
-ViewCount: 159968
-Tags: <java><xml><validation><xsd>
-<p>The Java runtime library supports validation. Last time I checked this was the Apache Xerces parser under the covers. You should probably use a <a href="http://java.sun.com/j2se/1.5.0/docs/api/javax/xml/validation/Validator.html">javax.xml.validation.Validator</a>.</p>
-
-<pre><code>import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.*;
-...
-
-URL schemaFile = new URL("http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd");
-Source xmlFile = new StreamSource(new File("web.xml"));
-SchemaFactory schemaFactory = SchemaFactory
-    .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-Schema schema = schemaFactory.newSchema(schemaFile);
-Validator validator = schema.newValidator();
-try {
-  validator.validate(xmlFile);
-  System.out.println(xmlFile.getSystemId() + " is valid");
-} catch (SAXException e) {
-  System.out.println(xmlFile.getSystemId() + " is NOT valid");
-  System.out.println("Reason: " + e.getLocalizedMessage());
-}
-</code></pre>
-
-<p>The schema factory constant is the string <code>http://www.w3.org/2001/XMLSchema</code> which defines XSDs. The above code validates a WAR deployment descriptor against the URL <code>http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd</code> but you could just as easily validate against a local file.</p>
-
-<p>You should not use the DOMParser to validate a document (unless your goal is to create a document object model anyway). This will start creating DOM objects as it parses the document - wasteful if you aren't going to use them.</p>
 
 ===UCLA===
 PostId: 16979
@@ -1838,38 +1300,6 @@ private static String urlEncode(String s) {
 <p>I had to re-implement URLencode because Java's would use <code>+</code> for space and Mail took those literally. Haven't tested on Windows yet.</p>
 
 ===UCLA===
-PostId: 17398
-Score: 3
-Accepted: 0
-ViewCount: 13279
-Tags: <java><windows><osx><email>
-<blockquote>
-  <p>I had to re-implement URLencode
-  because Java's would use + for space
-  and Mail took those literally.</p>
-</blockquote>
-
-<p>I don't know if Java has some built-in method for urlencoding the string, but this link <a href="http://www.permadi.com/tutorial/urlEncoding/" rel="nofollow"><a href="http://www.permadi.com/tutorial/urlEncoding/" rel="nofollow">http://www.permadi.com/tutorial/urlEncoding/</a></a> shows some of the most common chars to encode:</p>
-
-<pre><code>;       %3B
-?       %3F
-/       %2F
-:       %3A
-#       %23
-&amp;       %24
-=       %3D
-+       %2B
-$       %26
-,       %2C
-space   %20 or +
-%       %25
-&lt;       %3C
-&gt;       %3E
-~       %7E
-%       %25
-</code></pre>
-
-===UCLA===
 PostId: 17535
 Score: 2
 Accepted: 0
@@ -1911,24 +1341,6 @@ Tags: <java><windows><osx><email>
 <p>Not sure about other OS's.</p>
 
 ===UCLA===
-PostId: 17954
-Score: 45
-Accepted: 0
-ViewCount: 126555
-Tags: <c#><java><math>
-<p>This should give you what you want.  You will definitely want x items divided by y items per page, the problem is when uneven numbers come up, so if there is a partial page we also want to add one page.</p>
-
-<pre><code>int x = number_of_items;
-int y = items_per_page;
-
-// with out library
-int pages = x/y + (x % y &gt; 0 ? 1 : 0)
-
-// with library
-int pages = (int)Math.Ceiling((double)x / (double)y);
-</code></pre>
-
-===UCLA===
 PostId: 17957
 Score: 28
 Accepted: 0
@@ -1953,40 +1365,6 @@ Tags: <c#><java><math>
 </code></pre>
 
 <p>Source: <a href="http://www.cs.nott.ac.uk/~rcb/G51MPC/slides/NumberLogic.pdf">Number Conversion, Roland Backhouse, 2001</a></p>
-
-===UCLA===
-PostId: 18529
-Score: 55
-Accepted: 1
-ViewCount: 123329
-Tags: <java><string><collections><integer>
-<p>As far as I know, iterate and instantiate is the only way to do this.  Something like (for others potential help, since I'm sure you know how to do this):</p>
-
-<pre><code>List&lt;Integer&gt; oldList = ...
-/* Specify the size of the list up front to prevent resizing. */
-List&lt;String&gt; newList = new ArrayList&lt;String&gt;(oldList.size()) 
-for (Integer myInt : oldList) { 
-  newList.add(String.valueOf(myInt)); 
-}
-</code></pre>
-
-===UCLA===
-PostId: 18558
-Score: 9
-Accepted: 0
-ViewCount: 123329
-Tags: <java><string><collections><integer>
-<p>Instead of using String.valueOf I'd use .toString(); it avoids some of the auto boxing described by @johnathan.holland</p>
-
-<p>The javadoc says that valueOf returns the same thing as Integer.toString().</p>
-
-<pre><code>List&lt;Integer&gt; oldList = ...
-List&lt;String&gt; newList = new ArrayList&lt;String&gt;(oldList.size());
-
-for (Integer myInt : oldList) { 
-  newList.add(myInt.toString()); 
-}
-</code></pre>
 
 ===UCLA===
 PostId: 18595
@@ -2015,22 +1393,6 @@ Tags: <java><collections><groovy><expandometaclass>
 </code></pre>
 
 ===UCLA===
-PostId: 19186
-Score: 74
-Accepted: 0
-ViewCount: 23359
-Tags: <java><byte><unsigned><signed>
-<p><a href="http://stackoverflow.com/questions/11088/what-is-the-best-way-to-work-around-the-fact-that-all-java-bytes-are-signed#11101" rel="nofollow">@pauldoo</a></p>
-
-<p>It is actually possible to get rid of the if statement and the addition if you do it like this.</p>
-
-<pre><code>byte[] foobar = ..;
-int value = (foobar[10] &amp; 0xff);
-</code></pre>
-
-<p>This way Java doesn't interpret the byte as a negative number and flip the sign bit on the integer also.</p>
-
-===UCLA===
 PostId: 19191
 Score: 39
 Accepted: 0
@@ -2051,32 +1413,6 @@ Tags: <java><string><collections><integer>
    collectionOfIntegers, 
    new IntegerToStringTransformer(), 
    newCollectionOfStrings);
-</code></pre>
-
-===UCLA===
-PostId: 19308
-Score: 2
-Accepted: 1
-ViewCount: 10268
-Tags: <java><internationalization>
-<p>Are you just asking how to store UTF-8/16 characters in a DB? in mysql it's just a matter of making sure you build with UTF8 support and setting that as the default, or specifying it at the column or table level. I've done this in oracle and mysql before. Create a table and cut and paste some i18n data into it and see what happens... you might be set already..</p>
-
-<p>or am I completely missing your point? </p>
-
-<p>edit: </p>
-
-<p>to be more explicit... I usually implement a three column table... language, key, value... where "value" contains potentially foreign language words or phrases... "language" contains some language key and "key" is an english key (i.e. login.error.password.dup)... language and key are indexed...  </p>
-
-<p>I've then built interfaces on a structure like this that shows each key with all its translations (values)... it can get fancy and include audit trails and "dirty" markers and all the other stuff you need to enable translators and data entry folk to make use of it..</p>
-
-<p>Edit 2:</p>
-
-<p>Now that you added the info about the JSTL tags, I understand a bit more... I've never done that myself.. but I found this old info on <a href="http://www.theserverside.com/discussions/thread.tss?thread_id=27390" rel="nofollow">theserverside</a>...</p>
-
-<pre><code>HttpSession session = .. [get hold of the session] 
-ResourceBundle bundle = new PropertyResourceBundle(toInputStream(myOwnProperties)) [toInputStream just stores the properties into an inputstream] 
-Locale locale = .. [get hold of the locale]
-javax.servlet.jsp.jstl.core.Config.set(session, Config.FMT_LOCALIZATION_CONTEXT, new LocalizationContext(bundle ,locale));
 </code></pre>
 
 ===UCLA===
@@ -2459,163 +1795,6 @@ Tags: <java><interface><methods><static>
 <p>Java <em>could</em> allow the latter; and in fact, starting in Java 8, it does!</p>
 
 ===UCLA===
-PostId: 23048
-Score: 315
-Accepted: 1
-ViewCount: 130467
-Tags: <java><unit-testing><mocking>
-<p>I've had good success using <a href="https://github.com/mockito/mockito">Mockito</a>.</p>
-
-<p>When I tried learning about JMock and EasyMock, I found the learning curve to be a bit steep (though maybe that's just me).</p>
-
-<p>I like Mockito because of its simple and clean syntax that I was able to grasp pretty quickly. The minimal syntax is designed to support the common cases very well, although the few times I needed to do something more complicated I found what I wanted was supported and easy to grasp.</p>
-
-<p>Here's an (abridged) example from the Mockito homepage:</p>
-
-<pre><code>import static org.mockito.Mockito.*;
-
-List mockedList = mock(List.class);
-mockedList.clear();
-verify(mockedList).clear();
-</code></pre>
-
-<p>It doesn't get much simpler than that.</p>
-
-<p>The only major downside I can think of is that it won't mock static methods.</p>
-
-===UCLA===
-PostId: 23944
-Score: 8
-Accepted: 0
-ViewCount: 89310
-Tags: <java><collections>
-<p>I have created an approximation of what I think you are looking for just using the Collections Framework in Java. Frankly, I think it is probably overkill as @Mike Deck points out. For such a small set of items to compare and process I think arrays would be a better choice from a procedural standpoint but here is my pseudo-coded (because I'm lazy) solution. I have an assumption that the Foo class is comparable based on it's unique id and not all of the data in it's contents:</p>
-
-<pre><code>Collection&lt;Foo&gt; oldSet = ...;
-Collection&lt;Foo&gt; newSet = ...;
-
-private Collection difference(Collection a, Collection b) {
-Collection result = a.clone();
-result.removeAll(b)
-return result;
-}
-
-private Collection intersection(Collection a, Collection b) {
-Collection result = a.clone();
-result.retainAll(b)
-return result;
-}
-
-public doWork() {
-    // if foo is in(*) oldSet but not newSet, call doRemove(foo)
-    Collection removed = difference(oldSet, newSet);
-    if (!removed.isEmpty()) {
-     loop removed {
-      Foo foo = removedIter.next();
-      doRemove(foo);
-     }
-    }
-//else if foo is not in oldSet but in newSet, call doAdd(foo)
-Collection added = difference(newSet, oldSet);
-if (!added.isEmpty()) {
- loop added  {
-  Foo foo = addedIter.next();
-  doAdd(foo);
- }
-}
-
-// else if foo is in both collections but modified, call doUpdate(oldFoo, newFoo)
-Collection matched = intersection(oldSet, newSet);
-Comparator comp = new Comparator() {
- int compare(Object o1, Object o2) {
-  Foo f1, f2;
-  if (o1 instanceof Foo) f1 = (Foo)o1;
-  if (o2 instanceof Foo) f2 = (Foo)o2;
-  return f1.activated == f2.activated ? f1.startdate.compareTo(f2.startdate) == 0 ? ... : f1.startdate.compareTo(f2.startdate) : f1.activated ? 1 : 0;
- }
-
- boolean equals(Object o) {
-  // equal to this Comparator..not used
- }
-}
-loop matched {
- Foo foo = matchedIter.next();
- Foo oldFoo = oldSet.get(foo);
- Foo newFoo = newSet.get(foo);
- if (comp.compareTo(oldFoo, newFoo ) != 0) {
-  doUpdate(oldFoo, newFoo);
- } else {
-  //else if !foo.activated &amp;&amp; foo.startDate &gt;= now, call doStart(foo)
-  if (!foo.activated &amp;&amp; foo.startDate &gt;= now) doStart(foo);
-
-  // else if foo.activated &amp;&amp; foo.endDate &lt;= now, call doEnd(foo)
-  if (foo.activated &amp;&amp; foo.endDate &lt;= now) doEnd(foo);
- }
-}
-}
-</code></pre>
-
-<p>As far as your questions:
-If I convert oldSet and newSet into HashMap (order is not of concern here), with the IDs as keys, would it made the code easier to read and easier to compare? How much of time &amp; memory performance is loss on the conversion?
-I think that you would probably make the code more readable by using a Map BUT...you would probably use more memory and time during the conversion.</p>
-
-<p>Would iterating the two sets and perform the appropriate operation be more efficient and concise?
-Yes, this would be the best of both worlds especially if you followed @Mike Sharek 's advice of Rolling your own List with the specialized methods or following something like the Visitor Design pattern to run through your collection and process each item.</p>
-
-===UCLA===
-PostId: 24023
-Score: 6
-Accepted: 1
-ViewCount: 4401
-Tags: <java><concurrency>
-<pre><code>class Producer implements Runnable {
-   private final BlockingQueue queue;
-   Producer(BlockingQueue q) { queue = q; }
-   public void run() {
-     try {
-       while (true) { queue.put(produce()); }
-     } catch (InterruptedException ex) { ... handle ...}
-   }
-   Object produce() { ... }
- }
-
- class Consumer implements Runnable {
-   private final BlockingQueue queue;
-   Consumer(BlockingQueue q) { queue = q; }
-   public void run() {
-     try {
-       while (true) { consume(queue.take()); }
-     } catch (InterruptedException ex) { ... handle ...}
-   }
-   void consume(Object x) { ... }
- }
-
- class Setup {
-   void main() {
-     BlockingQueue q = new SomeQueueImplementation();
-     Producer p = new Producer(q);
-     Consumer c1 = new Consumer(q);
-     Consumer c2 = new Consumer(q);
-     new Thread(p).start();
-     new Thread(c1).start();
-     new Thread(c2).start();
-   }
- }
-</code></pre>
-
-<p>This example was taken from the <a href="http://java.sun.com/javase/6/docs/api/java/util/concurrent/BlockingQueue.html">JDK 1.6 docs of <code>BlockingQueue</code></a>. So You can see that you are doing it the right way. Here's the quote which tells you that it have to work:</p>
-
-<blockquote>
-  <p>Memory consistency effects: As with
-  other concurrent collections, actions
-  in a thread prior to placing an object
-  into a BlockingQueue happen-before
-  actions subsequent to the access or
-  removal of that element from the
-  BlockingQueue in another thread.</p>
-</blockquote>
-
-===UCLA===
 PostId: 24335
 Score: 12
 Accepted: 0
@@ -2632,45 +1811,6 @@ public void flatfileMissing()
 </code></pre>
 
 <p>Here the @Test annotation is telling JUnit that the flatfileMissing method is a test that should be executed and that the expected result is a thrown IOException.  Thus, when you run your tests, this method will be called and the test will pass or fail based on whether an IOException is thrown.</p>
-
-===UCLA===
-PostId: 24499
-Score: 54
-Accepted: 1
-ViewCount: 6303
-Tags: <java><db4o>
-<p>We run DB40 .NET version in a large client/server project.</p>
-
-<p>Our experiences is that you can potentially get much better performance than typical relational databases.</p>
-
-<p>However, you really have to tweak your objects to get this kind of performance. For example, if you've got a list containing a lot of objects, DB4O activation of these lists is slow. There are a number of ways to get around this problem, for example, by inverting the relationship.</p>
-
-<p>Another pain is activation. When you retrieve or delete an object from DB4O, by default it will activate the whole object tree. For example, loading a Foo will load Foo.Bar.Baz.Bat, etc until there's nothing left to load. While this is nice from a programming standpoint, performance will slow down the more nesting in your objects. To improve performance, you can tell DB4O how many levels deep to activate. This is time-consuming to do if you've got a lot of objects.</p>
-
-<p>Another area of pain was text searching. DB4O's text searching is far, far slower than SQL full text indexing. (They'll tell you this outright on their site.) The good news is, it's easy to setup a text searching engine on top of DB4O. On our project, we've hooked up Lucene.NET to index the text fields we want.</p>
-
-<p>Some APIs don't seem to work, such as the GetField APIs useful in applying database upgrades. (For example, you've renamed a property and you want to upgrade your existing objects in the database, you need to use these "reflection" APIs to find objects in the database. Other APIs, such as the [Index] attribute don't work in the stable 6.4 version, and you must instead specify indexes using the Configure().Index("someField"), which is not strongly typed.</p>
-
-<p>We've witnessed performance degrade the larger your database. We have a 1GB database right now and things are still fast, but not nearly as fast as when we started with a tiny database.</p>
-
-<p>We've found another issue where Db4O.GetByID will close the database if the ID doesn't exist anymore in the database.</p>
-
-<p>We've found the Native Query syntax (the most natural, language-integrated syntax for queries) is far, far slower than the less-friendly SODA queries. So instead of typing:</p>
-
-<pre><code>// C# syntax for "Find all MyFoos with Bar == 23".
-// (Note the Java syntax is more verbose using the Predicate class.)
-IList&lt;MyFoo&gt; results = db4o.Query&lt;MyFoo&gt;(input =&gt; input.Bar == 23);
-</code></pre>
-
-<p>Instead of that nice query code, you have to an ugly SODA query which is string-based and not strongly-typed.</p>
-
-<p>For .NET folks, they've recently introduced a LINQ-to-DB4O provider, which provides for the best syntax yet. However, it's yet to be seen whether performance will be up-to-par with the ugly SODA queries.</p>
-
-<p>DB4O support has been decent: we've talked to them on the phone a number of times and have received helpful info. Their user forums are next to worthless, however, almost all questions go unanswered. Their JIRA bug tracker receives a lot of attention, so if you've got a nagging bug, file it on JIRA on it often will get fixed. (We've had 2 bugs that have been fixed, and another one that got patched in a half-assed way.)</p>
-
-<p>If all this hasn't scared you off, let me say that we're very happy with DB4O, despite the problems we've encountered. The performance we've got has blown away some O/RM frameworks we tried. I recommend it.</p>
-
-<p><strong>update July 2015</strong> Keep in mind, this answer was written back in 2008. While I appreciate the upvotes, the world has changed since then, and this information may not be as reliable as it was when it was written.</p>
 
 ===UCLA===
 PostId: 24897
@@ -3018,32 +2158,6 @@ Tags: <java><generics><syntax>
 </code></pre>
 
 ===UCLA===
-PostId: 26311
-Score: 21
-Accepted: 0
-ViewCount: 209530
-Tags: <java><audio>
-<p>A bad example:</p>
-
-<pre><code>import  sun.audio.*;    //import the sun.audio package
-import  java.io.*;
-
-//** add this into your application code as appropriate
-// Open an input stream  to the audio file.
-InputStream in = new FileInputStream(Filename);
-
-// Create an AudioStream object from the input stream.
-AudioStream as = new AudioStream(in);         
-
-// Use the static class member "player" from class AudioPlayer to play
-// clip.
-AudioPlayer.player.start(as);            
-
-// Similarly, to stop the audio.
-AudioPlayer.player.stop(as); 
-</code></pre>
-
-===UCLA===
 PostId: 26318
 Score: 95
 Accepted: 1
@@ -3274,4 +2388,1068 @@ Tags: <java><algorithm>
 </code></pre>
 
 <p>I can imagine that you have the objects as a tuple of two integers that form a real number. But you wont get the proper ordering since you're only taking a hash of the object. This is all up to you if hashing is what you meant, but to me, it doesn't make much sense. </p>
+
+===UCLA===
+PostId: 28726
+Score: 4
+Accepted: 0
+ViewCount: 3433
+Tags: <java><environment-variables>
+<pre><code>System.getProperty("user.dir");
+</code></pre>
+
+<p>The above method gets the user's working directory when the application was launched. This is fine if the application is launched by a script or shortcut that ensures that this is the case.</p>
+
+<p>However, if the app is launched from somewhere else (entirely possible if the command line is used), then the return value will be wherever the user was when they launched the app.</p>
+
+<p>A more reliable method is to <a href="http://illegalargumentexception.blogspot.com/2008/04/java-finding-application-directory.html" rel="nofollow">work out the application install directory using ClassLoaders</a>.</p>
+
+===UCLA===
+PostId: 29336
+Score: 18
+Accepted: 1
+ViewCount: 47249
+Tags: <java><hash><hashmap>
+<pre><code>Map map = new HashMap();
+Hashtable ht = new Hashtable();
+</code></pre>
+
+<p>Both classes can be found from the java.util package. The difference between the 2 is explained in the following <a href="http://www.jguru.com/faq/view.jsp?EID=430247">jGuru FAQ entry</a>.</p>
+
+===UCLA===
+PostId: 29356
+Score: 7
+Accepted: 0
+ViewCount: 47249
+Tags: <java><hash><hashmap>
+<p>Also don't forget that both Map and Hashtable are generic in Java 5 and up (as in any other class in the <a href="http://java.sun.com/javase/6/docs/technotes/guides/collections/index.html">Collections framework</a>).</p>
+
+<pre><code>Map&lt;String, Integer&gt; numbers = new HashMap&lt;String, Integer&gt;();
+numbers.put("one", 1);
+numbers.put("two", 2);
+numbers.put("three", 3);
+
+Integer one = numbers.get("one");
+Assert.assertEquals(1, one);
+</code></pre>
+
+===UCLA===
+PostId: 30854
+Score: 6
+Accepted: 0
+ViewCount: 102766
+Tags: <java><file><loading>
+<p>What are you loading the files for - configuration or data (like an input file) or as a resource?</p>
+
+<ul>
+<li>If as a resource, follow the suggestion and example given by <a href="http://stackoverflow.com/questions/6639/how-should-i-load-files-into-my-java-application#6640">Will and Justin</a> </li>
+<li>If configuration, then you can use a <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/ResourceBundle.html">ResourceBundle</a> or <a href="http://www.springframework.org/">Spring</a> (if your configuration is more complex).</li>
+<li>If you need to read a file in order to process the data inside, this code snippet may help <code>BufferedReader file = new BufferedReader(new FileReader(filename))</code> and then read each line of the file using <code>file.readLine();</code>  Don't forget to close the file.</li>
+</ul>
+
+===UCLA===
+PostId: 31146
+Score: 17
+Accepted: 0
+ViewCount: 25902
+Tags: <java><swing><embedded-resource><imageicon>
+<p>You can try something like:</p>
+
+<pre><code>InputStream stream = this.getClass().getClassLoader().getResourceAsStream("/images/image.jpg");
+</code></pre>
+
+<p>In your JAR file, you might have a directory structure of:</p>
+
+<blockquote>
+  <p>MyJAR.jar<br />
+  - com (class files in here)<br />
+  - images<br />
+  ----image.jpg</p>
+</blockquote>
+
+===UCLA===
+PostId: 31218
+Score: 78
+Accepted: 1
+ViewCount: 10467
+Tags: <java><oop>
+<p>I just found this recently. Use <code>OuterClassName.this</code>.</p>
+
+<pre><code>class Outer {
+    void foo() {
+        new Thread() {
+            public void run() {
+                Outer.this.bar();
+            }
+        }.start();
+    }
+    void bar() {
+        System.out.println("BAR!");
+    }
+}
+</code></pre>
+
+<p><strong>Updated</strong> If you just want the object itself (instead of invoking members), then <code>Outer.this</code> is the way to go.</p>
+
+===UCLA===
+PostId: 31463
+Score: 25
+Accepted: 1
+ViewCount: 28788
+Tags: <java><html><screen-scraping>
+<p>I'm currently using this:</p>
+
+<pre><code>String content = null;
+URLConnection connection = null;
+try {
+  connection =  new URL("http://www.google.com").openConnection();
+  Scanner scanner = new Scanner(connection.getInputStream());
+  scanner.useDelimiter("\\Z");
+  content = scanner.next();
+}catch ( Exception ex ) {
+    ex.printStackTrace();
+}
+System.out.println(content);
+</code></pre>
+
+<p>But not sure if there's a better way.</p>
+
+===UCLA===
+PostId: 31553
+Score: 1
+Accepted: 0
+ViewCount: 60088
+Tags: <java><orm><jpa>
+<p>If there aren't too many properties in the bean, you might just create a new instance and set all of its properties manually from the persisted bean.</p>
+
+<p>This could be implemented as a copy constructor, for example:</p>
+
+<pre><code>public Thing(Thing oldBean) {
+  this.setPropertyOne(oldBean.getPropertyOne());
+  // and so on
+}
+</code></pre>
+
+<p>Then:</p>
+
+<pre><code>Thing newBean = new Thing(oldBean);
+</code></pre>
+
+===UCLA===
+PostId: 31606
+Score: -2
+Accepted: 0
+ViewCount: 9854
+Tags: <java><design>
+<p>I agree with @Bernard that method chaining like this muddles the purpose of the setters. Instead I would suggest that if you are always creating chains of setters like this that you create a custom Constructor for your class so instead of</p>
+
+<pre><code>    MyClass
+    .setInt(1)
+    .setString("test")
+    .setBoolean(true)
+  ;
+</code></pre>
+
+<p>You do</p>
+
+<pre><code>new MyClass(1,"test",true);
+</code></pre>
+
+<p>This makes it more readable and you can use this to make your class immutable if you chose to.</p>
+
+===UCLA===
+PostId: 31621
+Score: 1
+Accepted: 0
+ViewCount: 9854
+Tags: <java><design>
+<p>I find this to be in poor style when used in setters. Immutable classes are usually a better fit for chaining, such as:</p>
+
+<pre><code>aWithB = myObject.withA(someA).withB(someB);
+</code></pre>
+
+<p>where <code>myObject</code> is of this class:</p>
+
+<pre><code>class MyClass {
+    withA(TypeA a) {
+         this.a.equals(a) ? this : new MyClass(this, a);
+    }
+
+    private MyClass(MyClass copy, TypeA a) {
+        this(copy);
+        this.a = a;
+    }
+}
+</code></pre>
+
+<p>The builder pattern is also useful, since it allows the final object to be immutable while preventing the intermediate instances you would normally have to create when using this technique.</p>
+
+===UCLA===
+PostId: 31797
+Score: 18
+Accepted: 0
+ViewCount: 47249
+Tags: <java><hash><hashmap>
+<p>You can use double-braces to set up the data. You still call add, or put, but it's less ugly:</p>
+
+<pre><code>private static final Hashtable&lt;String,Integer&gt; MYHASH = new Hashtable&lt;String,Integer&gt;() {{
+    put("foo",      1);
+    put("bar",      256);
+    put("data",     3);
+    put("moredata", 27);
+    put("hello",    32);
+    put("world",    65536);
+ }};
+</code></pre>
+
+===UCLA===
+PostId: 31866
+Score: 6
+Accepted: 0
+ViewCount: 33586
+Tags: <c#><java><c++><generics><templates>
+<p>Both Java and C# introduced generics after their first language release.  However, there are differences in how the core libraries changed when generics was introduced.  <strong>C#'s generics are not just compiler magic</strong> and so it was not possible to <em>generify</em> existing library classes without breaking backwards compatibility.</p>
+
+<p>For example, in Java the existing <a href="http://java.sun.com/javase/6/docs/technotes/guides/collections/index.html">Collections Framework</a> was <em>completely genericised</em>.  <strong>Java does not have both a generic and legacy non-generic version of the collections classes.</strong>  In some ways this is much cleaner - if you need to use a collection in C# there is really very little reason to go with the non-generic version, but those legacy classes remain in place, cluttering up the landscape. </p>
+
+<p><strong>Another notable difference is the Enum classes in Java and C#.</strong>  Java's Enum has this somewhat tortuous looking definition:</p>
+
+<pre><code>//  java.lang.Enum Definition in Java
+public abstract class Enum&lt;E extends Enum&lt;E&gt;&gt; implements Comparable&lt;E&gt;, Serializable {
+</code></pre>
+
+<p>(see Angelika Langer's very clear <a href="http://www.angelikalanger.com/GenericsFAQ/FAQSections/TypeParameters.html#How%20do%20I%20decrypt%20Enum?">explanation of exactly why</a> this is so.  Essentially, this means Java can give type safe access from a string to its Enum value:</p>
+
+<pre><code>//  Parsing String to Enum in Java
+Colour colour = Colour.valueOf("RED");
+</code></pre>
+
+<p>Compare this to C#'s version:</p>
+
+<pre><code>//  Parsing String to Enum in C#
+Colour colour = (Colour)Enum.Parse(typeof(Colour), "RED");
+</code></pre>
+
+<p>As Enum already existed in C# before generics was introduced to the language, the definition could not change without breaking existing code.  So, like collections, it remains in the core libraries in this legacy state.</p>
+
+===UCLA===
+PostId: 31929
+Score: 365
+Accepted: 1
+ViewCount: 33586
+Tags: <c#><java><c++><generics><templates>
+<p>I'll add my voice to the noise and take a stab at making things clear:</p>
+
+<h2>C# Generics allow you to declare something like this.</h2>
+
+<pre><code>List&lt;Person&gt; foo = new List&lt;Person&gt;();
+</code></pre>
+
+<p>and then the compiler will prevent you from putting things that aren't <code>Person</code> into the list.<br>
+Behind the scenes the C# compiler is just putting <code>List&lt;Person&gt;</code> into the .NET dll file, but at runtime the JIT compiler  goes and builds a new set of code, as if you had written a special list class just for containing people - something like <code>ListOfPerson</code>.</p>
+
+<p>The benefit of this is that it makes it really fast. There's no casting or any other stuff, and because the dll contains the information that this is a List of <code>Person</code>, other code that looks at it later on using reflection can tell that it contains <code>Person</code> objects (so you get intellisense and so on).</p>
+
+<p>The downside of this is that old C# 1.0 and 1.1 code (before they added generics) doesn't understand these new <code>List&lt;something&gt;</code>, so you have to manually convert things back to plain old <code>List</code> to interoperate with them. This is not that big of a problem, because C# 2.0 binary code is not backwards compatible. The only time this will ever happen is if you're upgrading some old C# 1.0/1.1 code to C# 2.0</p>
+
+<h2>Java Generics allow you to declare something like this.</h2>
+
+<pre><code>ArrayList&lt;Person&gt; foo = new ArrayList&lt;Person&gt;();
+</code></pre>
+
+<p>On the surface it looks the same, and it sort-of is. The compiler will also prevent you from putting things that aren't <code>Person</code> into the list.</p>
+
+<p>The difference is what happens behind the scenes. Unlike C#, Java does not go and build a special <code>ListOfPerson</code> - it just uses the plain old <code>ArrayList</code> which has always been in Java. When you get things out of the array, the usual <code>Person p = (Person)foo.get(1);</code> casting-dance still has to be done. The compiler is saving you the key-presses, but the speed hit/casting is still incurred just like it always was.<br>
+When people mention "Type Erasure" this is what they're talking about. The compiler inserts the casts for you, and then 'erases' the fact that it's meant to be a list of <code>Person</code> not just <code>Object</code></p>
+
+<p>The benefit of this approach is that old code which doesn't understand generics doesn't have to care. It's still dealing with the same old <code>ArrayList</code> as it always has. This is more important in the java world because they wanted to support compiling code using Java 5 with generics, and having it run on old 1.4 or previous JVM's, which microsoft deliberately decided not to bother with.</p>
+
+<p>The downside is the speed hit I mentioned previously, and also because there is no <code>ListOfPerson</code> pseudo-class or anything like that going into the .class files, code that looks at it later on (with reflection, or if you pull it out of another collection where it's been converted into <code>Object</code> or so on) can't tell in any way that it's meant to be a list containing only <code>Person</code> and not just any other array list.</p>
+
+<h2>C++ Templates allow you to declare something like this</h2>
+
+<pre><code>std::list&lt;Person&gt;* foo = new std::list&lt;Person&gt;();
+</code></pre>
+
+<p>It looks like C# and Java generics, and it will do what you think it should do, but behind the scenes different things are happening.</p>
+
+<p>It has the most in common with C# generics in that it builds special <code>pseudo-classes</code> rather than just throwing the type information away like java does, but it's a whole different kettle of fish.</p>
+
+<p>Both C# and Java produce output which is designed for virtual machines. If you write some code which has a <code>Person</code> class in it, in both cases some information about a <code>Person</code> class will go into the .dll or .class file, and the JVM/CLR will do stuff with this.</p>
+
+<p>C++ produces raw x86 binary code. Everything is <em>not</em> an object, and there's no underlying virtual machine which needs to know about a <code>Person</code> class. There's no boxing or unboxing, and functions don't have to belong to classes, or indeed anything. </p>
+
+<p>Because of this, the C++ compiler places no restrictions on what you can do with templates - basically any code you could write manually, you can get templates to write for you.<br>
+The most obvious example is adding things:</p>
+
+<p>In C# and Java, the generics system needs to know what methods are available for a class, and it needs to pass this down to the virtual machine. The only way to tell it this is by either hard-coding the actual class in, or using interfaces. For example:</p>
+
+<pre><code>string addNames&lt;T&gt;( T first, T second ) { return first.Name() + second.Name(); }
+</code></pre>
+
+<p>That code won't compile in C# or Java, because it doesn't know that the type <code>T</code> actually provides a method called Name(). You have to tell it - in C# like this:</p>
+
+<pre><code>interface IHasName{ string Name(); };
+string addNames&lt;T&gt;( T first, T second ) where T : IHasName { .... }
+</code></pre>
+
+<p>And then you have to make sure the things you pass to addNames implement the IHasName interface and so on. The java syntax is different (<code>&lt;T extends IHasName&gt;</code>), but it suffers from the same problems.</p>
+
+<p>The 'classic' case for this problem is trying to write a function which does this</p>
+
+<pre><code>string addNames&lt;T&gt;( T first, T second ) { return first + second; }
+</code></pre>
+
+<p>You can't actually write this code because there are no ways to declare an interface with the <code>+</code> method in it. You fail.</p>
+
+<p>C++ suffers from none of these problems. The compiler doesn't care about passing types down to any VM's - if both your objects have a .Name() function, it will compile. If they don't, it won't. Simple.</p>
+
+<p>So, there you have it :-)</p>
+
+===UCLA===
+PostId: 32067
+Score: 10
+Accepted: 0
+ViewCount: 10396
+Tags: <java><debugging><compiler-construction>
+<pre><code>public abstract class Config
+{
+    public static final boolean ENABLELOGGING = true;
+}
+</code></pre>
+
+<p><hr /></p>
+
+<pre><code>import static Config.*;
+
+public class MyClass
+{
+    public myMethod()
+    {
+        System.out.println("Hello, non-logging world");
+
+        if (ENABLELOGGING)
+        {
+            log("Hello, logging world.");
+        }
+    }
+}
+</code></pre>
+
+<p>The compiler will remove the code block with "Hello, logging world." in it if ENABLE_LOGGING is set to true because it's a static final value. If you use an obfuscator such as proguard, then the Config class will vanish too.</p>
+
+<p>An obfuscator would also allow things like this instead:</p>
+
+<pre><code>public class MyClass
+{
+    public myMethod()
+    {
+        System.out.println("Hello, non-logging world");
+
+        Log.log("Hello, logging world.");
+    }
+}
+</code></pre>
+
+<p><hr /></p>
+
+<pre><code>import static Config.*;
+
+public abstract class Log
+{
+    public static void log(String s)
+    {
+        if (ENABLELOGGING)
+        {
+            log(s);
+        }
+    }
+}
+</code></pre>
+
+<p>The method Log#log would reduce to nothing in the compiler, and be removed by the obfuscator, along with any calls to that method and eventually even the Log class would itself be removed.</p>
+
+===UCLA===
+PostId: 32073
+Score: 15
+Accepted: 0
+ViewCount: 34607
+Tags: <java><timer>
+<p>If your <code>Timer</code> is only ever going to have one task to execute then I would suggest subclassing it:</p>
+
+<pre><code>import java.util.Timer;
+import java.util.TimerTask;
+
+public class ReschedulableTimer extends Timer
+{
+    private Runnable  task;
+    private TimerTask timerTask;
+
+    public void schedule(Runnable runnable, long delay)
+    {
+        task = runnable;
+        timerTask = new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                task.run();
+            }
+        };
+        this.schedule(timerTask, delay);
+    }
+
+    public void reschedule(long delay)
+    {
+        timerTask.cancel();
+        timerTask = new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                task.run();
+            }
+        };
+        this.schedule(timerTask, delay);
+    }
+}
+</code></pre>
+
+<p>You will need to work on the code to add checks for mis-use, but it  should achieve what you want. The <code>ScheduledThreadPoolExecutor</code> does not seem to have built in support for rescheduling existing tasks either, but a similar approach should work there as well.</p>
+
+===UCLA===
+PostId: 32122
+Score: 19
+Accepted: 1
+ViewCount: 10396
+Tags: <java><debugging><compiler-construction>
+<p>Two recommendations.</p>
+
+<p><strong>First:</strong>
+for real logging, use a modern logging package like log4j or java's own built in logging. Don't worry about performance so much, the logging level check is on the order of nanoseconds. (it's an integer comparison).</p>
+
+<p>And if you have more than a single log statement, guard the whole block:</p>
+
+<p>(log4j, for example:)</p>
+
+<pre><code>if (logger.isDebugEnabled()) {
+
+  // perform expensive operations
+  // build string to log
+
+  logger.debug("....");
+}
+</code></pre>
+
+<p>This gives you the added ability control logging at runtime. Having to restart and run a debug build can be very inconvenient.</p>
+
+<p><strong>Second:</strong></p>
+
+<p>You may find <a href="http://java.sun.com/j2se/1.4.2/docs/guide/lang/assert.html">assertions</a> are more what you need. An assertion is a statement which evaluates to a boolean result, with an optional message:</p>
+
+<pre><code> assert (sky.state != FALLING) : "The sky is falling!";
+</code></pre>
+
+<p>Whenever the assertion results in a false, the assertion fails and an AssertionError is thrown containing your message (this is an unchecked exception, intended to exit the application). </p>
+
+<p>The neat thing is, these are treated special by the JVM and can toggled at runtime down to the class level, using a VM parameter (no recompile needed). If not enabled, there is zero overhead.</p>
+
+===UCLA===
+PostId: 32223
+Score: 59
+Accepted: 0
+ViewCount: 471203
+Tags: <java><override><equals><hashcode>
+<p>A clarification about the <code>obj.getClass() != getClass()</code>.</p>
+
+<p>This statement is the result of <code>equals()</code> being inheritance unfriendly. The JLS (Java language specification) specifies that if <code>A.equals(B) == true</code> then <code>B.equals(A)</code> must also return <code>true</code>. If you omit that statement inheriting classes that override <code>equals()</code> (and change its behavior) will break this specification.</p>
+
+<p>Consider the following example of what happens when the statement is omitted:</p>
+
+<pre><code>    class A {
+      int field1;
+
+      A(int field1) {
+        this.field1 = field1;
+      }
+
+      public boolean equals(Object other) {
+        return (other != null &amp;&amp; other instanceof A &amp;&amp; ((A) other).field1 == field1);
+      }
+    }
+
+    class B extends A {
+        int field2;
+
+        B(int field1, int field2) {
+            super(field1);
+            this.field2 = field2;
+        }
+
+        public boolean equals(Object other) {
+            return (other != null &amp;&amp; other instanceof B &amp;&amp; ((B)other).field2 == field2 &amp;&amp; super.equals(other));
+        }
+    }    
+</code></pre>
+
+<p>Doing <code>new A(1).equals(new A(1))</code> Also, <code>new B(1,1).equals(new B(1,1))</code> result give out true, as it should.</p>
+
+<p>This looks all very good, but look what happens if we try to use both classes:</p>
+
+<pre><code>A a = new A(1);
+B b = new B(1,1);
+a.equals(b) == true;
+b.equals(a) == false;
+</code></pre>
+
+<p>Obviously, this is wrong.</p>
+
+<p>If you want to ensure the symmetric condition. a=b if b=a and the Liskov substitution principle call <code>super.equals(other)</code> not only in the case of <code>B</code> instance, but check after for <code>A</code> instance:</p>
+
+<pre><code>if (other instanceof B )
+   return (other != null &amp;&amp; ((B)other).field2 == field2 &amp;&amp; super.equals(other)); 
+if (other instanceof A) return super.equals(other); 
+   else return false;
+</code></pre>
+
+<p>Which will output:</p>
+
+<pre><code>a.equals(b) == true;
+b.equals(a) == true;
+</code></pre>
+
+<p>Where, if <code>a</code> is not a reference of <code>B</code>, then it might be a be a reference of class <code>A</code> (because you extend it), in this case you call <code>super.equals()</code> <strong>too</strong>.</p>
+
+===UCLA===
+PostId: 32304
+Score: 2
+Accepted: 0
+ViewCount: 19624
+Tags: <java><null><assert>
+<blockquote>
+  <p>It doesn't really go into how you would enforce this restriction?</p>
+</blockquote>
+
+<p>You enforce it by throwing an <a href="http://msdn.microsoft.com/en-us/library/system.argumentexception.aspx" rel="nofollow">ArgumentExcexception</a> if they pass in null.</p>
+
+<pre><code>if (p1 == null || p2 == null) {
+    throw new ArgumentExcexception("Invalid argument for xProjection");
+}
+</code></pre>
+
+===UCLA===
+PostId: 32325
+Score: 11
+Accepted: 0
+ViewCount: 10268
+Tags: <java><internationalization>
+<p>I finally got this working with danb's help above.</p>
+
+<p>This is my resource bundle class and resource bundle control class.</p>
+
+<p>I used this code from @[danb]'s.</p>
+
+<pre><code>ResourceBundle bundle = ResourceBundle.getBundle("AwesomeBundle", locale, DbResourceBundle.getMyControl());
+javax.servlet.jsp.jstl.core.Config.set(actionBeanContext.getRequest(), Config.FMT_LOCALIZATION_CONTEXT, new LocalizationContext(bundle, locale));
+</code></pre>
+
+<p>and wrote this class.</p>
+
+<pre><code>public class DbResourceBundle extends ResourceBundle
+{
+    private Properties properties;
+
+    public DbResourceBundle(Properties inProperties)
+    {
+     properties = inProperties;
+    }
+
+    @Override
+    @SuppressWarnings(value = { "unchecked" })
+    public Enumeration&lt;String&gt; getKeys()
+    {
+     return properties != null ? ((Enumeration&lt;String&gt;) properties.propertyNames()) : null;
+    }
+
+    @Override
+    protected Object handleGetObject(String key)
+    {
+     return properties.getProperty(key);
+    }
+
+    public static ResourceBundle.Control getMyControl()
+    {
+     return new ResourceBundle.Control()
+     {
+
+      @Override
+      public List&lt;String&gt; getFormats(String baseName)
+      {
+       if (baseName == null)
+       {
+        throw new NullPointerException();
+       }
+       return Arrays.asList("db");
+      }
+
+      @Override
+      public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload) throws IllegalAccessException,
+            InstantiationException, IOException
+      {
+       if ((baseName == null) || (locale == null) || (format == null) || (loader == null))
+        throw new NullPointerException();
+       ResourceBundle bundle = null;
+       if (format.equals("db"))
+       {
+        Properties p = new Properties();
+        DataSource ds = (DataSource) ContextFactory.getApplicationContext().getBean("clinicalDataSource");
+        Connection con = null;
+        Statement s = null;
+        ResultSet rs = null;
+        try
+        {
+         con = ds.getConnection();
+         StringBuilder query = new StringBuilder();
+         query.append("select label, value from i18n where bundle='" + StringEscapeUtils.escapeSql(baseName) + "' ");
+
+         if (locale != null)
+         {
+          if (StringUtils.isNotBlank(locale.getCountry()))
+          {
+           query.append("and country='" + escapeSql(locale.getCountry()) + "' ");
+
+          }
+          if (StringUtils.isNotBlank(locale.getLanguage()))
+          {
+           query.append("and language='" + escapeSql(locale.getLanguage()) + "' ");
+
+          }
+          if (StringUtils.isNotBlank(locale.getVariant()))
+          {
+           query.append("and variant='" + escapeSql(locale.getVariant()) + "' ");
+
+          }
+         }
+         s = con.createStatement();
+         rs = s.executeQuery(query.toString());
+         while (rs.next())
+         {
+          p.setProperty(rs.getString(1), rs.getString(2));
+         }
+        }
+        catch (Exception e)
+        {
+         e.printStackTrace();
+         throw new RuntimeException("Can not build properties: " + e);
+        }
+        finally
+        {
+         DbUtils.closeQuietly(con, s, rs);
+        }
+        bundle = new DbResourceBundle(p);
+       }
+       return bundle;
+      }
+
+      @Override
+      public long getTimeToLive(String baseName, Locale locale)
+      {
+       return 1000 * 60 * 30;
+      }
+
+      @Override
+      public boolean needsReload(String baseName, Locale locale, String format, ClassLoader loader, ResourceBundle bundle, long loadTime)
+      {
+       return true;
+      }
+
+     };
+    }
+</code></pre>
+
+===UCLA===
+PostId: 32509
+Score: 4
+Accepted: 1
+ViewCount: 15130
+Tags: <java><performance><http><io><buffer>
+<p>In this case, I would do as you are doing (use a byte array for buffering and not one of the stream buffers).</p>
+
+<p>There are exceptions, though. One place you see buffers (output this time) is in the servlet API. Data isn't written to the underlying stream until <em>flush()</em> is called, allowing you to buffer output but then dump the buffer if an error occurs and write an error page instead. You might buffer input if you needed to reset the stream for rereading using <em>mark(int)</em> and <em>reset()</em>. For example, maybe you'd inspect the file header before deciding on which content handler to pass the stream to.</p>
+
+<p>Unrelated, but I think you should rewrite your stream handling. This pattern works best to avoid resource leaks:</p>
+
+<pre><code>    InputStream stream = new FileInputStream("in");
+    try { //no operations between open stream and try block
+        //work
+    } finally { //do nothing but close this one stream in the finally
+        stream.close();
+    }
+</code></pre>
+
+<p>If you are opening multiple streams, nest try/finally blocks.</p>
+
+<p>Another thing your code is doing is making the assumption that the returned content is encoded in your VM's default character set (though that might be adequate, depending on the use case).</p>
+
+===UCLA===
+PostId: 32658
+Score: 20
+Accepted: 0
+ViewCount: 11755
+Tags: <java><swing><jfilechooser>
+<p>Incase anyone else needs this in the future:</p>
+
+<pre><code>class DirectoryRestrictedFileSystemView extends FileSystemView
+{
+    private final File[] rootDirectories;
+
+    DirectoryRestrictedFileSystemView(File rootDirectory)
+    {
+        this.rootDirectories = new File[] {rootDirectory};
+    }
+
+    DirectoryRestrictedFileSystemView(File[] rootDirectories)
+    {
+        this.rootDirectories = rootDirectories;
+    }
+
+    @Override
+    public File createNewFolder(File containingDir) throws IOException
+    {       
+        throw new UnsupportedOperationException("Unable to create directory");
+    }
+
+    @Override
+    public File[] getRoots()
+    {
+        return rootDirectories;
+    }
+
+    @Override
+    public boolean isRoot(File file)
+    {
+        for (File root : rootDirectories) {
+            if (root.equals(file)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+</code></pre>
+
+<p>You'll obviously need to make a better "createNewFolder" method, but this does restrict the user to one of more directories.</p>
+
+<p>And use it like this:</p>
+
+<pre><code>FileSystemView fsv = new DirectoryRestrictedFileSystemView(new File("X:\\"));
+JFileChooser fileChooser = new JFileChooser(fsv);
+</code></pre>
+
+<p>or like this:</p>
+
+<pre><code>FileSystemView fsv = new DirectoryRestrictedFileSystemView( new File[] {
+    new File("X:\\"),
+    new File("Y:\\")
+});
+JFileChooser fileChooser = new JFileChooser(fsv);
+</code></pre>
+
+===UCLA===
+PostId: 32666
+Score: 2
+Accepted: 0
+ViewCount: 19624
+Tags: <java><null><assert>
+<p>Spec# looks very interesting!</p>
+
+<p>When something like that isn't available, I generally test non-private methods with a run-time null-check, and assertions for internal methods.  Rather than code the null check explicitly in each method, I delegate that to a utilities class with a check null method:</p>
+
+<pre><code>/**
+ * Checks to see if an object is null, and if so 
+ * generates an IllegalArgumentException with a fitting message.
+ * 
+ * @param o The object to check against null.
+ * @param name The name of the object, used to format the exception message
+ *
+ * @throws IllegalArgumentException if o is null.
+ */
+public static void checkNull(Object o, String name) 
+    throws IllegalArgumentException {
+   if (null == o)
+      throw new IllegalArgumentException(name + " must not be null");
+}
+
+public static void checkNull(Object o) throws IllegalArgumentException {
+   checkNull(o, "object");
+} 
+
+// untested:
+public static void checkNull(Object... os) throws IllegalArgumentException {
+   for(Object o in os) checkNull(o);  
+}
+</code></pre>
+
+<p>Then checking turns into:</p>
+
+<pre><code>public void someFun(String val1, String val2) throws IllegalArgumentException {
+   ExceptionUtilities.checkNull(val1, "val1");
+   ExceptionUtilities.checkNull(val2, "val2");
+
+   /** alternatively:
+   ExceptionUtilities.checkNull(val1, val2);
+   **/
+
+   /** ... **/
+}
+</code></pre>
+
+<p><em>That</em> can be added with editor macros, or a code-processing script.
+<strong>Edit:</strong> The verbose check could be added this way as well, but I think it's significantly easier to automate the addition of a single line.</p>
+
+===UCLA===
+PostId: 32707
+Score: 3
+Accepted: 1
+ViewCount: 924
+Tags: <java><swing><jscrollpane>
+<p>Have you tried explicitly enabling double-buffering on the JList and/or the components that it is drawing over? (with:<code>setDoubleBuffered(boolean aFlag)</code>)</p>
+
+<p>Another thought is that you <em>might</em> need to exit the function immediately after delegating to the EDT.  The way your code is written, it looks like the update will happen in both threads if <code>ContentChanged</code> is invoked from a non-EDT thread.  Logging in the first <code>if</code> (or set a breakpoint in the if -- but <em>not</em> in the runnable -- should help determine if that is your problem.</p>
+
+<p>eg:</p>
+
+<pre><code>public void contentsChanged(final ListDataEvent evt)
+{
+    if (!EventQueue.isDispatchThread())
+    {
+        log.debug("Delegating contentsChanged(...) to EDT");
+
+        EventQueue.invokeLater(new Runnable() 
+        {
+            public void run() 
+            {
+                contentsChanged(evt);
+            }
+        });
+        // don't run ensureIndexIsVisible twice:
+        return;
+     }
+
+     if (playbackInProgress)
+     {
+         int index = evt.getIndex0();
+         currentContentList.ensureIndexIsVisible(index);
+     }
+}
+</code></pre>
+
+===UCLA===
+PostId: 33456
+Score: 9
+Accepted: 0
+ViewCount: 116731
+Tags: <java><security><cookies><xss><httponly>
+<p>For session cookies it doesn't seem to be supported in Tomcat yet. See the bug report <a href="https://issues.apache.org/bugzilla/show_bug.cgi?id=44382">Need to add support for HTTPOnly session cookie parameter</a>. A somewhat involved work-around for now can be found <a href="http://manicode.blogspot.com/2008/03/httponly-support-for-apache-tomcat.html">here</a>, which basically boils down to manually patching Tomcat. Can't really find an easy way to do it at this moment at this point I'm affraid. </p>
+
+<p>To summarize the work-around, it involves downloading the 5.5 <a href="http://tomcat.apache.org/tomcat-5.5-doc/building.html">source</a>, and then change the source in the following places:</p>
+
+<p><em>org.apache.catalina.connector.Request.java</em></p>
+
+<pre><code>//this is what needs to be changed
+//response.addCookieInternal(cookie);
+
+//this is whats new
+response.addCookieInternal(cookie, true);
+}
+</code></pre>
+
+<p><em>org.apache.catalina.connectorResponse.addCookieInternal</em></p>
+
+<pre><code>public void addCookieInternal(final Cookie cookie) {
+addCookieInternal(cookie, false);
+}
+
+public void addCookieInternal(final Cookie cookie, boolean HTTPOnly) {
+
+if (isCommitted())
+return;
+
+final StringBuffer sb = new StringBuffer();
+//web application code can receive a IllegalArgumentException
+//from the appendCookieValue invokation
+if (SecurityUtil.isPackageProtectionEnabled()) {
+AccessController.doPrivileged(new PrivilegedAction() {
+public Object run(){
+ServerCookie.appendCookieValue
+(sb, cookie.getVersion(), cookie.getName(),
+cookie.getValue(), cookie.getPath(),
+cookie.getDomain(), cookie.getComment(),
+cookie.getMaxAge(), cookie.getSecure());
+return null;
+}
+});
+} else {
+ServerCookie.appendCookieValue
+(sb, cookie.getVersion(), cookie.getName(), cookie.getValue(),
+cookie.getPath(), cookie.getDomain(), cookie.getComment(),
+cookie.getMaxAge(), cookie.getSecure());
+}
+//of course, we really need to modify ServerCookie
+//but this is the general idea
+if (HTTPOnly) {
+sb.append("; HttpOnly");
+}
+
+//if we reached here, no exception, cookie is valid
+// the header name is Set-Cookie for both "old" and v.1 ( RFC2109 )
+// RFC2965 is not supported by browsers and the Servlet spec
+// asks for 2109.
+addHeader("Set-Cookie", sb.toString());
+
+cookies.add(cookie);
+}
+</code></pre>
+
+===UCLA===
+PostId: 33461
+Score: 18
+Accepted: 0
+ViewCount: 116731
+Tags: <java><security><cookies><xss><httponly>
+<blockquote>
+  <p><strong>Update: The JSESSIONID stuff here is
+  only for older containers. Please use
+  jt's currently accepted answer unless
+  you are using &lt; Tomcat 6.0.19 or &lt; Tomcat
+  5.5.28 or another container that does not support HttpOnly JSESSIONID cookies as a config option.</strong></p>
+</blockquote>
+
+<p>When setting cookies in your app, use</p>
+
+<pre><code>response.setHeader( "Set-Cookie", "name=value; HttpOnly");
+</code></pre>
+
+<p>However, in many webapps, the most important cookie is the session identifier, which is automatically set by the container as the JSESSIONID cookie.</p>
+
+<p>If you only use this cookie, you can write a ServletFilter to re-set the cookies on the way out, forcing JSESSIONID to HttpOnly. The page at <strike>http://keepitlocked.net/archive/2007/11/05/java-and-httponly.aspx</strike> <a href="http://alexsmolen.com/blog/?p=16">http://alexsmolen.com/blog/?p=16</a> suggests adding the following in a filter.</p>
+
+<pre><code>if (response.containsHeader( "SET-COOKIE" )) {
+  String sessionid = request.getSession().getId();
+  response.setHeader( "SET-COOKIE", "JSESSIONID=" + sessionid 
+                      + ";Path=/&lt;whatever&gt;; Secure; HttpOnly" );
+} 
+</code></pre>
+
+<p>but note that this will overwrite all cookies and only set what you state here in this filter. </p>
+
+<p>If you use additional cookies to the JSESSIONID cookie, then you'll need to extend this code to set all the cookies in the filter. This is not a great solution in the case of multiple-cookies, but is a perhaps an acceptable quick-fix for the JSESSIONID-only setup. </p>
+
+<p>Please note that as your code evolves over time, there's a nasty hidden bug waiting for you when you forget about this filter and try and set another cookie somewhere else in your code. Of course, it won't get set.</p>
+
+<p>This really is a hack though. If you do use Tomcat and can compile it, then take a look at Shabaz's excellent suggestion to patch HttpOnly support into Tomcat.</p>
+
+===UCLA===
+PostId: 33651
+Score: 0
+Accepted: 0
+ViewCount: 2388
+Tags: <c#><java><design><api><exception>
+<p>You can catch unchecked exceptions without needing to wrap them. For example, the following is valid Java.</p>
+
+<pre><code>try {
+    throw new IllegalArgumentException();
+} catch (Exception e) {
+    System.out.println("boom");
+}
+</code></pre>
+
+<p>So in your action/controller you can have a try-catch block around the logic where the Hibernate call is made. Depending on the exception you can render specific error messages. </p>
+
+<p>But I guess in your today it could be Hibernate, and tomorrow SleepLongerDuringWinter framework. In this case you need to pretend to have your own little ORM framework that wraps around the third party framework. This will allow you to wrap any framework specific exceptions into more meaningful and/or checked exceptions that you know how to make better sense of.  </p>
+
+===UCLA===
+PostId: 33715
+Score: 13
+Accepted: 1
+ViewCount: 1795
+Tags: <java><swing><actionlistener><mouselistener>
+<p>The <em>implements mouselistener, mousemotionlistener</em> just allows the displayArea class to listen to some, to be defined, Swing component's mouse events. You have to explicitly define what it should be listening at. So I suppose you could add something like this to the constructor:</p>
+
+<pre><code>this.addMouseListener(this);
+this.addMouseMotionListener(this);
+</code></pre>
+
+===UCLA===
+PostId: 33986
+Score: 19
+Accepted: 0
+ViewCount: 28788
+Tags: <java><html><screen-scraping>
+<p>This has worked well for me:</p>
+
+<pre><code>URL url = new URL(theURL);
+InputStream is = url.openStream();
+int ptr = 0;
+StringBuffer buffer = new StringBuffer();
+while ((ptr = is.read()) != -1) {
+    buffer.append((char)ptr);
+}
+</code></pre>
+
+<p>Not sure at to whether the other solution(s) provided are any more efficient or not.</p>
+
+===UCLA===
+PostId: 34658
+Score: 976
+Accepted: 1
+ViewCount: 375267
+Tags: <java><unit-testing><junit><tdd>
+<p>If you have somewhat of a legacy application, and you're not allowed to change the visibility of your methods, the best way to test private methods is to use <a href="http://en.wikipedia.org/wiki/Reflection_%28computer_programming%29">reflection</a>. </p>
+
+<p>Internally we're using helpers to get/set <code>private</code> and <code>private static</code> variables as well as invoke <code>private</code> and <code>private static</code> methods. The following patterns will let you do pretty much anything related to the private methods and fields. Of course you can't change <code>private static final</code> variables through reflection.</p>
+
+<pre><code>Method method = targetClass.getDeclaredMethod(methodName, argClasses);
+method.setAccessible(true);
+return method.invoke(targetObject, argObjects);
+</code></pre>
+
+<p>And for fields:</p>
+
+<pre><code>Field field = targetClass.getDeclaredField(fieldName);
+field.setAccessible(true);
+field.set(object, value);
+</code></pre>
+
+<hr>
+
+<blockquote>
+  <p><strong>Notes:</strong><br>
+  1. <code>targetClass.getDeclaredMethod(methodName, argClasses)</code> lets you look into <code>private</code> methods. The same thing applies for
+  <code>getDeclaredField</code>.<br>
+  2. The <code>setAccessible(true)</code> is required to play around with privates.</p>
+</blockquote>
+
+===UCLA===
+PostId: 34689
+Score: 2
+Accepted: 0
+ViewCount: 4021
+Tags: <java><recursion><coding-style><integer><final>
+<p>The current solution I am using is:</p>
+
+<pre><code>int[] counter = {0};
+</code></pre>
+
+<p>and then pass it to the recursive algorithm:</p>
+
+<pre><code>public List&lt;Thing&gt; doIt (String aString, int[] counter) { ... }
+</code></pre>
+
+<p>and when I want to increment it:</p>
+
+<pre><code>counter[0]++;
+</code></pre>
+
+<p>Not super elegant, but it works...</p>
 

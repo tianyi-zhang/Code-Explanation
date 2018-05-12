@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class ExtractJavaPost {
 	final String url = "jdbc:mysql://localhost:3306/stackoverflow";
@@ -68,24 +69,33 @@ public class ExtractJavaPost {
 					String viewCount = result.getString("ViewCount");
 					String tags = result.getString("tags");
 					
-//					if(!tags.contains("<android>")) {
-//						continue;
-//					}
+					if(!tags.contains("<android>")) {
+						continue;
+					}
 					
 					// get the post body
 					String body = result.getString("Body");
 					ArrayList<String> snippets = getCode(body);
-					boolean hasOneStatement = false;
+					boolean hasOneSnippet = false;
 					for(String snippet: snippets) {
 						snippet = StringEscapeUtils.unescapeHtml4(snippet);
+						// make sure this snippet has at least one statement and is not a code element in text
 						if(snippet.contains(";")) {
-							// make sure this snippet has at least one statement and is not a code element in text
-							hasOneStatement = true;
-							break;
+							// check whether this snippet can be accepted by our Java snippet parser
+							PartialProgramParser parser = new PartialProgramParser();
+							try {
+								CompilationUnit cu = parser.getCompilationUnit(snippet);
+								if(cu != null) {
+									hasOneSnippet = true;
+									break;
+								}
+							} catch (Exception e) {
+								continue;
+							}
 						}
 					}
 					
-					if(!hasOneStatement) {
+					if(!hasOneSnippet) {
 						continue;
 					}
 					
