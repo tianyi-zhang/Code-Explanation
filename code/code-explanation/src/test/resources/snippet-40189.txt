@@ -1,0 +1,4 @@
+1. > adb shell
+2. # sqlite3 /data/data/com.android.providers.settings/databases/settings.db
+3. sqlite> INSERT INTO system VALUES(99,’http_proxy', 'proxy:port');
+4. sqlite>.exit
