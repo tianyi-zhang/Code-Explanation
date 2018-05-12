@@ -8,8 +8,10 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class ExtractJavaPost {
 	final String url = "jdbc:mysql://localhost:3306/stackoverflow";
@@ -66,8 +68,28 @@ public class ExtractJavaPost {
 					String viewCount = result.getString("ViewCount");
 					String tags = result.getString("tags");
 					
-					// get the snippet
+//					if(!tags.contains("<android>")) {
+//						continue;
+//					}
+					
+					// get the post body
 					String body = result.getString("Body");
+					ArrayList<String> snippets = getCode(body);
+					boolean hasOneStatement = false;
+					for(String snippet: snippets) {
+						snippet = StringEscapeUtils.unescapeHtml4(snippet);
+						if(snippet.contains(";")) {
+							// make sure this snippet has at least one statement and is not a code element in text
+							hasOneStatement = true;
+							break;
+						}
+					}
+					
+					if(!hasOneStatement) {
+						continue;
+					}
+					
+					// write the post to a text file
 					String s = "===UCLA===" + System.lineSeparator();
 					s += "PostId: " + id + System.lineSeparator();
 					s += "Score: " + score + System.lineSeparator();
@@ -75,6 +97,7 @@ public class ExtractJavaPost {
 					s += "ViewCount: " + viewCount + System.lineSeparator();
 					s += "Tags: " + tags + System.lineSeparator();
 					s += body + System.lineSeparator();
+					
 					FileUtils.writeStringToFile(o, s, Charset.defaultCharset(), true);
 					count++;
 				}
@@ -84,10 +107,35 @@ public class ExtractJavaPost {
 		}
 	}
 	
+	/**
+	 * 
+	 * Extract the snippet in a <code></code> tag from a given post body 
+	 * 
+	 * @param body
+	 * @return
+	 */
+	private ArrayList<String> getCode(String body) {
+		ArrayList<String> codes = new ArrayList<>();
+		String start = "<code>", end = "</code>";
+		int s = 0;
+		while (true) {
+			s = body.indexOf(start, s);
+			if (s == -1)
+				break;
+			s += start.length();
+			int e = body.indexOf(end, s);
+			if (e == -1)
+				break;
+			codes.add(body.substring(s, e).trim());
+			s = e + end.length();
+		}
+		return codes;
+	}
+	
 	public static void main(String[] args) {
 		ExtractJavaPost extractor = new ExtractJavaPost();
 		extractor.connect();
-		extractor.getJavaPosts("output/first-100-posts.txt", 100);
+		extractor.getJavaPosts("output/first-100-android-posts.txt", 100);
 		extractor.close();
 	}
 }
