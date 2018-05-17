@@ -27,17 +27,29 @@ public class ExtractExplanation {
 
 	public void getPostExplanations(String input, String output) {
 		try {		
+			// Delimiter string depends on implementation of ExtractJavaPost
+			String delimiter = "===UCLA===";
+			
+			final Boolean DEBUG_FLAG = true;
+			
+			if(output != null) {
 				File o = new File(output);
 				if(o.exists()) {
 					o.delete();
 				}
 				o.createNewFile();
-			// Delimiter string depends on implementation of ExtractJavaPost
-			String delimiter = "===UCLA===";
+				
+				File d = new File(output+"debug");
+				if(d.exists()) {
+					d.delete();
+				}
+				d.createNewFile();
 			
 			File inputFile = new File(input);
 			FileReader reader = new FileReader(inputFile);
 			Scanner scanner = new Scanner(reader).useDelimiter(delimiter);
+			PartialProgramParser parser = new PartialProgramParser();
+			JavaSnippetTokenizer tokenizer = new JavaSnippetTokenizer();
 			
 			while(scanner.hasNext()) {
 				// Use the scanner to read the next post 
@@ -46,17 +58,14 @@ public class ExtractExplanation {
 				// Tokenize code and match tokens with sentences 
 				// Write buffer to output file 
 				
-				final Boolean DEBUG_FLAG = true;
-				
 				String post = scanner.next();
 
 				ArrayList<String> sentences = getPostSentences(post);
 
 				String code = getPostCode(post);
 
-				PartialProgramParser parser = new PartialProgramParser();
+				
 				CompilationUnit cu = parser.getCompilationUnit(code);
-				JavaSnippetTokenizer tokenizer = new JavaSnippetTokenizer();
 				
 
 				if(tokenizer != null && cu != null) {
@@ -64,9 +73,24 @@ public class ExtractExplanation {
 				}
 				
 				
+				for(String snippet : tokenizer.elements) {
+					int matchCount = 0;
+					String snippetOutput = new String();
+					snippetOutput += "\nMatches for token: " + snippet + "\n";
+					for(int k = 0; k < sentences.size(); k++) {
+						if(sentences.get(k).contains(snippet)) {
+							matchCount++;
+							snippetOutput += sentences.get(k) + "\n";
+						}
+					}
+					snippetOutput += "Match count: " + matchCount + "\n";
+					System.out.println(snippetOutput);
+					FileUtils.writeStringToFile(o, snippetOutput, Charset.defaultCharset(), true);
+				}
+				
 				if(DEBUG_FLAG) {
 					String postOutput = new String();
-					postOutput += post;
+					//postOutput += post;
 					postOutput += "Sentences:\n";
 					for(int i = 0; i < sentences.size(); i++)
 						postOutput += sentences.get(i) + "\n";
@@ -81,14 +105,14 @@ public class ExtractExplanation {
 					}
 					
 					System.out.println(postOutput);
-					if(output != null)
-						FileUtils.writeStringToFile(o, postOutput, Charset.defaultCharset(), true);
+					FileUtils.writeStringToFile(d, postOutput, Charset.defaultCharset(), true);
+					}
 				}
-			}
 			
 			reader.close();
 			scanner.close();
 			return;
+			}
 		}
 		catch (FileNotFoundException exception) {
 			exception.printStackTrace();
