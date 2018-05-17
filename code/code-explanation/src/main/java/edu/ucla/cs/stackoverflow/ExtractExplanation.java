@@ -61,8 +61,6 @@ public class ExtractExplanation {
 		Pattern pTagPattern = Pattern.compile("<p>(.*)</p>");
 		Matcher pTagMatcher = pTagPattern.matcher(post);
 
-		Pattern removeTags = Pattern.compile("<p>|</p>");
-		
 		ArrayList<String> explanation = new ArrayList<String>();
 		
 		if(post == null || post.length() == 0)
@@ -70,8 +68,9 @@ public class ExtractExplanation {
 		
 		while(pTagMatcher.find()) {
 			String curr = new String(pTagMatcher.group(0));
-			Matcher removeCurrTags = removeTags.matcher(curr);
-			curr = removeCurrTags.replaceAll("");
+			curr = curr.replaceAll("<p>", "");
+			curr = curr.replaceAll("</p>", "");
+			curr = curr.replaceAll("<.*?>", "");
 			Scanner sentenceScanner = new Scanner(curr).useDelimiter(":|\\n|\\.");
 			while(sentenceScanner.hasNext()) {
 				String token = new String();
