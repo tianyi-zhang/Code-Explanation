@@ -5,9 +5,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.IOException;
 
 
@@ -57,27 +66,19 @@ public class ExtractExplanation {
 	}
 	
 	private ArrayList<String> getPostSentences(String post) {
-		//Extract contents of p tags
-		Pattern pTagPattern = Pattern.compile("<p>(.*)</p>");
-		Matcher pTagMatcher = pTagPattern.matcher(post);
-
 		ArrayList<String> explanation = new ArrayList<String>();
 		
 		if(post == null || post.length() == 0)
 			return explanation;
 		
-		while(pTagMatcher.find()) {
-			String curr = new String(pTagMatcher.group(0));
-			curr = curr.replaceAll("<p>", "");
-			curr = curr.replaceAll("</p>", "");
-			curr = curr.replaceAll("<.*?>", "");
-			Scanner sentenceScanner = new Scanner(curr).useDelimiter(":|\\n|\\.");
-			while(sentenceScanner.hasNext()) {
-				String token = new String();
-				token = sentenceScanner.next();
-				if(token.length() > 1)
-					explanation.add(token);
-			}
+		Document postParsed = Jsoup.parse(post);
+		Elements pTags = postParsed.select("p");
+		
+		for (Element element: pTags) {
+			String currText = element.ownText();
+			String currArr[] = currText.split("\\.|\\:|\\n");
+			List<String> temp = Arrays.asList(currArr);
+			explanation.addAll(temp);
 		}
 		
 		return explanation;
@@ -101,3 +102,40 @@ public class ExtractExplanation {
 		return codeTagRemover.replaceAll("");
 	}
 }
+
+
+/*
+private ArrayList<String> getPostSentences(String post) {
+	//Extract contents of p tags
+	Pattern pTagPattern = Pattern.compile("<p>(.*)</p>");
+	Matcher pTagMatcher = pTagPattern.matcher(post);
+
+	ArrayList<String> explanation = new ArrayList<String>();
+	
+	if(post == null || post.length() == 0)
+		return explanation;
+	
+	while(pTagMatcher.find()) {
+		String curr = new String(pTagMatcher.group(0));
+		curr = curr.replaceAll("<p>", "");
+		curr = curr.replaceAll("</p>", "");
+		curr = curr.replaceAll("<.*?>", "");
+		curr = curr.replaceAll("<(.+)>([^<]+)</\\\\1>", "");
+		curr = curr.replaceAll("http:.*? ", "");
+		Scanner sentenceScanner = new Scanner(curr).useDelimiter(":|\\n|\\.|\\<");
+		while(sentenceScanner.hasNext()) {
+			String token = new String();
+			token = sentenceScanner.next();	
+			int spaceCount = 0;
+			for(int i = 0; i < token.length(); i++)
+				if(token.charAt(i) == ' ')
+					spaceCount++;
+			if(spaceCount != 0 && token.length() > 1)
+				explanation.add(token.trim());
+					
+		}
+	}
+	
+	return explanation;
+}
+*/
