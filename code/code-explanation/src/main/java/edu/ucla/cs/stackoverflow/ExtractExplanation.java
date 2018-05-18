@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -60,8 +61,9 @@ public class ExtractExplanation {
 				
 				String post = scanner.next();
 
+				post  = StringEscapeUtils.unescapeHtml4(post);
+				
 				ArrayList<String> sentences = getPostSentences(post);
-
 				String code = getPostCode(post);
 
 				
@@ -142,7 +144,7 @@ public class ExtractExplanation {
 	}
 	
 	private String getPostCode(String post) {
-		Pattern codeTagPattern = Pattern.compile("<code>([^<]+)</code>");
+		Pattern codeTagPattern = Pattern.compile("<pre><code>([^<]+)</code></pre>");
 		Matcher codeTagMatcher = codeTagPattern.matcher(post);
 			
 		String code = new String();
