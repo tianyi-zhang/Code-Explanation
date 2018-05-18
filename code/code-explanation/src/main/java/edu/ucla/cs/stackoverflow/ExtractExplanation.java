@@ -75,8 +75,7 @@ public class ExtractExplanation {
 				
 				for(String snippet : tokenizer.elements) {
 					int matchCount = 0;
-					String snippetOutput = new String();
-					snippetOutput += "\nMatches for token: " + snippet + "\n";
+					String snippetOutput = "\nMatches for token: " + snippet + "\n";
 					for(int k = 0; k < sentences.size(); k++) {
 						if(sentences.get(k).contains(snippet)) {
 							matchCount++;
@@ -89,9 +88,8 @@ public class ExtractExplanation {
 				}
 				
 				if(DEBUG_FLAG) {
-					String postOutput = new String();
+					String postOutput = "Sentences:\n";
 					//postOutput += post;
-					postOutput += "Sentences:\n";
 					for(int i = 0; i < sentences.size(); i++)
 						postOutput += sentences.get(i) + "\n";
 					postOutput += "\nCode:\n";
