@@ -91,7 +91,7 @@ public class ExtractExplanation {
 				if(DEBUG_FLAG) {
 					String postOutput = new String();
 					//postOutput += post;
-					postOutput += "Sentences:\n";
+					postOutput += "\nSentences:\n";
 					for(int i = 0; i < sentences.size(); i++)
 						postOutput += sentences.get(i) + "\n";
 					postOutput += "\nCode:\n";
