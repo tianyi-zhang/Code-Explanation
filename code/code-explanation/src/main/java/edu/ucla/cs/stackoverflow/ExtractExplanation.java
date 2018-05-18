@@ -158,4 +158,9 @@ public class ExtractExplanation {
 		Matcher codeTagRemover = removeTags.matcher(code);
 		return codeTagRemover.replaceAll("");
 	}
+	
+	public static void main(String[] args) {
+		ExtractExplanation extractor = new ExtractExplanation();
+		extractor.getPostExplanations("output/first-100-posts.txt", "output/first-100-post-processed.txt");
+	}
 }
