@@ -32,26 +32,20 @@ public class ExtractExplanation {
 			String delimiter = "===UCLA===";
 			
 			final Boolean DEBUG_FLAG = true;
+			final int INFO_LINE_COUNT = 4;
 			
 			if(output != null) {
 				File o = new File(output);
 				if(o.exists()) {
 					o.delete();
 				}
-				o.createNewFile();
-				
-				File d = new File(output+"debug");
-				if(d.exists()) {
-					d.delete();
-				}
-				d.createNewFile();
+
 			
 			File inputFile = new File(input);
 			FileReader reader = new FileReader(inputFile);
 			Scanner scanner = new Scanner(reader).useDelimiter(delimiter);
 			PartialProgramParser parser = new PartialProgramParser();
-			JavaSnippetTokenizer tokenizer = new JavaSnippetTokenizer();
-			
+
 			while(scanner.hasNext()) {
 				// Use the scanner to read the next post 
 				// Extract sentences from the post 
@@ -59,55 +53,64 @@ public class ExtractExplanation {
 				// Tokenize code and match tokens with sentences 
 				// Write buffer to output file 
 				
+				
 				String post = scanner.next();
-
+				String postCodeInfo = "";
+				String postCodeRaw = "";
+				String postSentences = "";
+				String postOutput = "";
+				
+				
 				post  = StringEscapeUtils.unescapeHtml4(post);
 				
 				ArrayList<String> sentences = getPostSentences(post);
-				String code = getPostCode(post);
-
+				ArrayList<String> code = getPostCode(post);
 				
-				CompilationUnit cu = parser.getCompilationUnit(code);
-				
+				for(int i = 0; i < code.size(); i++) {
+					postCodeRaw += code.get(i) + "\n";
+				}
 
-				if(tokenizer != null && cu != null) {
+				for(int i = 0; i < code.size(); i++) {
+					JavaSnippetTokenizer tokenizer = new JavaSnippetTokenizer();
+					CompilationUnit cu = parser.getCompilationUnit(code.get(i));
+					String snippetOutput = "";
+					if(tokenizer == null || cu == null) {
+						snippetOutput = "Tokenizer failed for the snippet: " + code.get(i) + "\n";
+						continue;
+					}
 					cu.accept(tokenizer);
-				}
-				
-				
-				for(String snippet : tokenizer.elements) {
-					int matchCount = 0;
-					String snippetOutput = "\nMatches for token: " + snippet + "\n";
-					for(int k = 0; k < sentences.size(); k++) {
-						if(sentences.get(k).contains(snippet)) {
-							matchCount++;
-							snippetOutput += sentences.get(k) + "\n";
-						}
-					}
-					snippetOutput += "Match count: " + matchCount + "\n";
-					System.out.println(snippetOutput);
-					FileUtils.writeStringToFile(o, snippetOutput, Charset.defaultCharset(), true);
-				}
-				
-				if(DEBUG_FLAG) {
-					String postOutput = "Sentences:\n";
-					//postOutput += post;
-					for(int i = 0; i < sentences.size(); i++)
-						postOutput += sentences.get(i) + "\n";
-					postOutput += "\nCode:\n";
-					postOutput += code;
-					postOutput += "\nCode tokens:\n";
-					if(tokenizer != null && cu != null) {
-						postOutput += tokenizer.elements.toString();
-					}
-					else {
-						postOutput += "Java tokenizer failed for this post.\n";
-					}
+					snippetOutput += "All tokens: " + tokenizer.elements.toString() + "\n";
 					
-					System.out.println(postOutput);
-					FileUtils.writeStringToFile(d, postOutput, Charset.defaultCharset(), true);
+					for(String token : tokenizer.elements) {
+						int matchCount = 0;
+						snippetOutput += "\nMatches for token: " + token + "\n";
+						if(token.length() == 1)
+							token = " " + token + " ";
+						for(int k = 0; k < sentences.size(); k++) {
+							if(sentences.get(k).contains(token)) {
+								matchCount++;
+								snippetOutput += sentences.get(k) + "\n";
+							}
+						}
+						snippetOutput += "Match count: " + matchCount + "\n";
 					}
+					postCodeInfo += snippetOutput;
 				}
+				
+					for(int i = 0; i < sentences.size(); i++)
+						postSentences += sentences.get(i) + "\n";
+					
+					postOutput += delimiter + "\n";
+					postOutput += post + "\n";
+					postOutput += "Sentences\n" + postSentences + "\n";
+					postOutput += "Post code:\n" + postCodeRaw + "\n";
+					postOutput += "Post code parsed:\n" + postCodeInfo + "\n";
+					
+					//System.out.println(postOutput);
+					FileUtils.writeStringToFile(o, postOutput, Charset.defaultCharset(), true);
+				}
+				
+				
 			
 			reader.close();
 			scanner.close();
@@ -143,26 +146,25 @@ public class ExtractExplanation {
 		return explanation;
 	}
 	
-	private String getPostCode(String post) {
-		Pattern codeTagPattern = Pattern.compile("<pre><code>([^<]+)</code></pre>");
+	private ArrayList<String> getPostCode(String post) {
+		Pattern codeTagPattern = Pattern.compile("<code>([^<]+)</code>");
 		Matcher codeTagMatcher = codeTagPattern.matcher(post);
 			
-		String code = new String();
+		ArrayList<String> code = new ArrayList<String>();
 		
 		if(post == null || post.length() == 0)
 			return code;
 		
 		while(codeTagMatcher.find()) {
-			code += ' ' + codeTagMatcher.group(0);
+			code.add(codeTagMatcher.group(0).replaceAll("<code>", "").replaceAll("</code>", ""));
 		}
 		
-		Pattern removeTags = Pattern.compile("<.+?>");
-		Matcher codeTagRemover = removeTags.matcher(code);
-		return codeTagRemover.replaceAll("");
+		return code;
 	}
 	
 	public static void main(String[] args) {
 		ExtractExplanation extractor = new ExtractExplanation();
 		extractor.getPostExplanations("output/first-100-posts.txt", "output/first-100-post-processed.txt");
+		System.out.printf("Done");
 	}
 }
