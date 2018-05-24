@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -101,10 +101,10 @@ public class ExtractExplanation {
 						snippetOutput += "\nMatches for token: " + token + "\n";
 						
 						if(token.length() <= 2)
-							token = " " + token + " ";
+							token = " " + token + " ";	
 						
 						for(int k = 0; k < sentences.size(); k++) {
-							if(sentences.get(k).contains(token)) {
+							if(StringUtils.containsIgnoreCase(sentences.get(k), token)) {
 								matchCount++;
 								snippetOutput += sentences.get(k) + "\n";
 							}
@@ -153,6 +153,11 @@ public class ExtractExplanation {
 		}
 	}
 	
+	private boolean containsIgnoreCase(String string, String token) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private ArrayList<String> getPostSentences(String post) {
 		ArrayList<String> explanation = new ArrayList<String>();
 		
@@ -173,16 +178,17 @@ public class ExtractExplanation {
 	}
 	
 	private ArrayList<String> getPostCode(String post) {
-		Pattern codeTagPattern = Pattern.compile("<code>([^<]+)</code>");
-		Matcher codeTagMatcher = codeTagPattern.matcher(post);
+		Document postParsed = Jsoup.parse(post);
+		Elements codeTags = postParsed.select("code");
 			
 		ArrayList<String> code = new ArrayList<String>();
 		
 		if(post == null || post.length() == 0)
 			return code;
 		
-		while(codeTagMatcher.find()) {
-			code.add(codeTagMatcher.group(0).replaceAll("<code>", "").replaceAll("</code>", ""));
+		for (Element element: codeTags) {
+			String currText = element.text();
+			code.add(currText);
 		}
 		
 		return code;
