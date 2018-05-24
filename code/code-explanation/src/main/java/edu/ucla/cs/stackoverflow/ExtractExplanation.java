@@ -31,8 +31,8 @@ public class ExtractExplanation {
 			// Delimiter string depends on implementation of ExtractJavaPost
 			String delimiter = "===UCLA===";
 			
-			final Boolean DEBUG_FLAG = true;
-			final int INFO_LINE_COUNT = 4;
+			final Boolean DEBUG_FLAG = false;
+			final int INFO_LINE_COUNT = 3;
 			
 			if(output != null) {
 				File o = new File(output);
@@ -54,14 +54,28 @@ public class ExtractExplanation {
 				// Write buffer to output file 
 				
 				
-				String post = scanner.next();
+				
+				String postInfo = "";
 				String postCodeInfo = "";
 				String postCodeRaw = "";
 				String postSentences = "";
 				String postOutput = "";
 				
 				
+				if(scanner.hasNextLine())
+					scanner.nextLine();
+				
+				for(int i = 0; i < INFO_LINE_COUNT; i++) {
+					if(scanner.hasNextLine())
+						postInfo += scanner.nextLine() + '\n';
+				}
+				
+				
+				String post = scanner.next();
 				post  = StringEscapeUtils.unescapeHtml4(post);
+				
+				// Advance scanner beyond delimiter string
+
 				
 				ArrayList<String> sentences = getPostSentences(post);
 				ArrayList<String> code = getPostCode(post);
@@ -79,13 +93,16 @@ public class ExtractExplanation {
 						continue;
 					}
 					cu.accept(tokenizer);
+					snippetOutput += "--- Code Snippet " + i + " ---\n";
 					snippetOutput += "All tokens: " + tokenizer.elements.toString() + "\n";
 					
 					for(String token : tokenizer.elements) {
 						int matchCount = 0;
 						snippetOutput += "\nMatches for token: " + token + "\n";
-						if(token.length() == 1)
+						
+						if(token.length() <= 2)
 							token = " " + token + " ";
+						
 						for(int k = 0; k < sentences.size(); k++) {
 							if(sentences.get(k).contains(token)) {
 								matchCount++;
@@ -94,17 +111,26 @@ public class ExtractExplanation {
 						}
 						snippetOutput += "Match count: " + matchCount + "\n";
 					}
-					postCodeInfo += snippetOutput;
+					snippetOutput += "--- --- --- --- --- ---\n";
+					postCodeInfo += snippetOutput + "\n";
 				}
 				
 					for(int i = 0; i < sentences.size(); i++)
 						postSentences += sentences.get(i) + "\n";
 					
 					postOutput += delimiter + "\n";
-					postOutput += post + "\n";
-					postOutput += "Sentences\n" + postSentences + "\n";
-					postOutput += "Post code:\n" + postCodeRaw + "\n";
-					postOutput += "Post code parsed:\n" + postCodeInfo + "\n";
+					
+					postOutput += postInfo + "\n";
+					
+					if(DEBUG_FLAG)
+						postOutput += post + "\n";
+					
+					if(DEBUG_FLAG) {
+						postOutput += "Sentences\n" + postSentences + "\n";
+						postOutput += "Post code:\n" + postCodeRaw + "\n";
+					}
+					
+					postOutput += "Post code parsed:\n" + postCodeInfo + "\n\n";
 					
 					//System.out.println(postOutput);
 					FileUtils.writeStringToFile(o, postOutput, Charset.defaultCharset(), true);
@@ -137,7 +163,7 @@ public class ExtractExplanation {
 		Elements pTags = postParsed.select("p");
 		
 		for (Element element: pTags) {
-			String currText = element.ownText();
+			String currText = element.text();
 			String currArr[] = currText.split("\\.|\\:|\\n");
 			List<String> temp = Arrays.asList(currArr);
 			explanation.addAll(temp);
