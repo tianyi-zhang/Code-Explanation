@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -26,7 +27,7 @@ import java.nio.charset.Charset;
 @SuppressWarnings("resource")
 public class ExtractExplanation {
 
-	public void getPostExplanations(String input, String output) {
+	private void getPostExplanations(String input, String output) {
 		try {		
 			// Delimiter string depends on implementation of ExtractJavaPost
 			String delimiter = "===UCLA===";
@@ -98,7 +99,9 @@ public class ExtractExplanation {
 					
 					for(String token : tokenizer.elements) {
 						int matchCount = 0;
+						sentenceComperator c = new sentenceComperator(token);
 						snippetOutput += "\nMatches for token: " + token + "\n";
+						ArrayList<String> candidates = new ArrayList<String>();
 						
 						if(token.length() <= 2)
 							token = " " + token + " ";	
@@ -106,9 +109,21 @@ public class ExtractExplanation {
 						for(int k = 0; k < sentences.size(); k++) {
 							if(StringUtils.containsIgnoreCase(sentences.get(k), token)) {
 								matchCount++;
-								snippetOutput += sentences.get(k) + "\n";
+								// Add sentence to candidates if a substring is found
+								// Remove leading space
+								candidates.add(sentences.get(k).replaceFirst("^\\s+", ""));
 							}
 						}
+						
+						candidates.sort(c);
+						
+						for(int k = 0; k < candidates.size(); k++) {
+							snippetOutput += candidates.get(k) + " Score: " 
+										 + c.scoreSentence(candidates.get(k), token)
+										 + "\n";
+							
+						}
+						
 						snippetOutput += "Match count: " + matchCount + "\n";
 					}
 					snippetOutput += "--- --- --- --- --- ---\n";
@@ -153,11 +168,6 @@ public class ExtractExplanation {
 		}
 	}
 	
-	private boolean containsIgnoreCase(String string, String token) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	private ArrayList<String> getPostSentences(String post) {
 		ArrayList<String> explanation = new ArrayList<String>();
 		
@@ -192,6 +202,58 @@ public class ExtractExplanation {
 		}
 		
 		return code;
+	}
+	
+	private class sentenceComperator implements Comparator<String>{
+		
+		private String token;
+		
+		sentenceComperator(String input){
+			token = input;
+		}
+		
+		public int compare(String a, String b) {
+			int a_score = scoreSentence(a, token);
+			int b_score = scoreSentence(b, token);
+			
+			if(a.length() > b.length())
+				a_score++;
+			
+			if(b.length() > a.length())
+				b_score++;
+			
+			return a_score - b_score;
+		}
+		
+		public int scoreSentence(String sentence, String token) {
+	
+			int score = 0;
+			
+			// Check if sentence starts with an uppercase letter
+			if(Character.isUpperCase(sentence.charAt(0)))
+				score++;
+			
+			// Check if sentence ends with punctuation
+			if(sentence.charAt(sentence.length() - 1) == '.' || sentence.charAt(sentence.length() - 1) == ':'
+			|| sentence.charAt(sentence.length() - 1) == '!')
+				score++;
+			
+			int wordCount = sentence.split(" ").length;
+			
+			// Check if sentence has at least 3 words
+			if(wordCount >= 3)
+				score++;
+			
+			// Add a point each time token appears as substring:
+			score += StringUtils.countMatches(sentence, token);
+				
+			// Provide a multiplier if token appears seperate as a "word" (not as substring)
+			if(sentence.contains(" " + token + " "))
+				score *= 2;
+			
+			return score;
+		}
+
 	}
 	
 	public static void main(String[] args) {
