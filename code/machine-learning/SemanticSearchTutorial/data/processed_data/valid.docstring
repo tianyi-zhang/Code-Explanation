@@ -1,0 +1,38 @@
+check if non - admin context passed to admin actions throws
+decorator to be used as debian native test fixture
+decorator to be used as 3.0 ( quilt ) test fixture
+decorator to be used as 3.0 ( quilt ) with additional tarball test fixture
+decorator to be used as overay mode test fixture
+"import a debian native package , verify and change into repo"
+"import a 3.0 ( quilt ) package , verify and change into repo"
+"import a 3.0 ( quilt ) package with additional tarball , verify and change into repo"
+import a 3.0 ( quilt ) debian dir for overlay mode
+tests if the output from ` argparse ` matches our expectations .
+collector for task dependencies .
+collector for interface dependencies .
+collector for driver dependencies for task supporting instrument and having the proper selected_intrument member .
+collector for profile dependencies for task supporting instrument and having the proper selected_intrument member .
+collector for driver dependencies for interface supporting instrument and having the proper selected_intrument member or being attached to a task that does .
+collector for profile dependencies for interface supporting instrument and having the proper selected_intrument member or being attached to a task that does .
+test analysing the dependencies of a task .
+test validating task dependencies .
+test collecting the dependencies found in a task .
+test analysing the dependencies in an interface .
+test validating interface dependencies .
+test collecting the dependencies found in an interface .
+test analysing the dependencies of a task .
+test analysing the dependencies of an interface .
+constructeur du conteneur
+"retourne true si le personnage a une cible , false sinon ."
+retourne la cible si présente dans le dictionnaire ou none .
+ajoute une cible .
+retire la cible .
+constructeur du conteneur
+"retourne true si le personnage a un choix défini , false sinon ."
+retourne les choix si présents dans le dictionnaire ou none .
+ajoute une cible .
+retire la cible .
+create a scope that is the root of the scope tree .
+check if two types are equal
+determine the greatest common type .
+pack a string an int as length followed by text data
