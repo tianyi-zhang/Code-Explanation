@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
-
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -32,7 +32,7 @@ public class ExtractExplanation {
 			// Delimiter string depends on implementation of ExtractJavaPost
 			String delimiter = "===UCLA===";
 			
-			final Boolean DEBUG_FLAG = false;
+			final Boolean DEBUG_FLAG = true;
 			final int INFO_LINE_COUNT = 3;
 			
 			if(output != null) {
@@ -103,8 +103,7 @@ public class ExtractExplanation {
 						snippetOutput += "\nMatches for token: " + token + "\n";
 						ArrayList<String> candidates = new ArrayList<String>();
 						
-						if(token.length() <= 2)
-							token = " " + token + " ";	
+						token = "<code>"+ token + "</code>";
 						
 						for(int k = 0; k < sentences.size(); k++) {
 							if(StringUtils.containsIgnoreCase(sentences.get(k), token)) {
@@ -118,8 +117,8 @@ public class ExtractExplanation {
 						candidates.sort(c);
 						
 						for(int k = 0; k < candidates.size(); k++) {
-							snippetOutput += candidates.get(k) + " Score: " 
-										 + c.scoreSentence(candidates.get(k), token)
+							snippetOutput += candidates.get(k) + "|| Score: " 
+										 + c.scoreSentence(candidates.get(k), token) + " ||"
 										 + "\n";
 							
 						}
@@ -178,8 +177,8 @@ public class ExtractExplanation {
 		Elements pTags = postParsed.select("p");
 		
 		for (Element element: pTags) {
-			String currText = element.text();
-			String currArr[] = currText.split("\\.|\\:|\\n");
+			String currText = element.html();
+			String currArr[] = currText.split(Pattern.quote(". "));
 			List<String> temp = Arrays.asList(currArr);
 			explanation.addAll(temp);
 		}
