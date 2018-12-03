@@ -1,0 +1,114 @@
+create or get the node pointed to by ` token ` from this node .
+store the ` key ` as a leaf of this node at position ` order ` .
+return the main key of this leaf .
+"merge two nodes to produce a new , united node with all their children ."
+initialize a new dictionary using a data iterator and a ( term ) tokenizer .
+"yield a stream of "" b-""/""i- "" prefixed keys for each token that matches ( part of ) a term or "" o "" if no match is found for the current token ."
+yield tags on the queue that contain values .
+deserialize a stream or string of json data .
+utility function which creates a schedule appropriate for initializing a schedulerplayer with .
+utility function which creates a child schedule appropriate to send to scheduleplayer.addchild ( ) .
+an infinite range beginning at 0 and stepping c{interval } with each iteration .
+"resolve a time generator . if c{time ] is c{none } and c{interval } is a c{tuple } then convert to c{int } ticks using c{clock } and create generator with metronome . if c{interval } is integral then this ticks value will be used as is as arg to metronome . otherwise if time ( via c{time } ) is already defined , this function is idempodent ."
+immediately start playing our schedule . ( generally you should not use this method but resumeplaying ( ) instead ) .
+immediately pause playing our schedule . ( generally you should not use this method but pauseplaying ( ) instead ) .
+a child schedule generator to this scheduleplayer . a child generator can not generate time but rather functions and arguments to be played in tandem with parent schedule :
+"resume ( or start ) playing schedule on the next measure . if paused , schedule will resume from where we left off ."
+"pause playing our schedule on the next measure . to resume playing after pausing , call resumeplaying ( ) ."
+"tuple for flow ( src , dst , sport , dport , proto )"
+"reversed tuple for flow ( dst , src , dport , sport , proto )"
+test for the flow class
+initialize flow class
+add a packet to this flow
+reassemble the flow and return all the info / data
+is this flow ready to go ?
+does the data look like a client to server ( cts ) or server to client ( stc ) traffic ?
+serve a get request .
+serve a head request .
+common code for get and head commands .
+helper to produce a directory listing ( absent index.html ) .
+translate a /-separated path to the local filename syntax .
+copy all data between two file objects .
+guess the type of a file .
+"set ice thickness to h0 within the disc centered at ( x0,y0 ) of radius r_inner , c / r in an annulus r_inner < r < = r_outer and 0 elsewhere ."
+"initialize the velocity field to a rigid rotation around the origin . this is slow , but it works ."
+test geometryevolution::step ( )
+test that the error does down as o(1/n )
+"the initial condition and the velocity fields are radially symmetric , so the result should be too ."
+@param rowlables : the names of the rows @param columnlabels : the names of the columns
+return the numeric indizes for these labels
+return the table with a function applied to it @param func : the function to apply to each element
+"@param labels : tuple of the form ( row , col )"
+"@param labels : tuple of the form ( row , col )"
+the table as a restructured text object
+return the minimum of the data in the table
+return the maximum of the data in the table
+iterate over the column names
+iterate over the row names
+"we do n't use it , but the adapter is passed the avatar as its first argument ."
+ansible module to add / remove packages or patterns from a yum repo 's exclude line
+create an exclude
+get the current exclude value
+update the exclude value
+"creates a new bucket . by default it 's located in the usa . you can pass location . eu to create an european bucket . you can also pass a locationconstraint for where the bucket should be located , and a storageclass describing how the data should be stored ."
+"fetch simple gene - term assocaitions from golr using bioentity document type , one line per gene ."
+collect results or failures from a list of running future tasks .
+this is a direct action passthrough taskmanager
+this is a direct action passthrough taskmanager
+submit and execute the given task .
+allows submitting an arbitrary method for work .
+allows submitting an arbitrary method for async work scheduling .
+return a qword at the specified location
+return a dword at the specified location
+return a word at the specified location
+return a byte at the specified location
+return a string at the specified location
+read the abinit file names
+"read the born charges from the outputfile file . each row of the output refers to a given field direction each column in the row refers the atomic displacement so the output is arranged [ [ a1x a1y a1z ] [ a2x a2y a2z ] [ a3x a3y a3z ] ] where 1,2,3 are the field directions and x , y , z are the atomic displacements"
+add a key / value . k is a list of hashables .
+remove a key / value . k is a list of hashables .
+value corresponding to a key or none . k is a list of hashables .
+returns a list of all values .
+return a list of keys where each key is a list of hashables .
+returns the number of keys .
+returns the maximum tree depth as an integer .
+recursively returns the maximum tree depth as an integer .
+a new instance of a : py : class:`cpip.util . dicttree . dicttreehtmltable ` .
+the column span .
+the row span .
+top level call that sets colspan and rowspan attributes .
+sets the column span .
+sets self._rowspan recursively .
+"returns a set of events that are a tuple of quadruples `` ( key_branch , value , rowspan_integer , colspan_integer ) ``"
+"returns a set of events that are a tuple of quadruples `` ( key_branch , value , rowspan_integer , colspan_integer ) ``"
+compute a discrete binning of a numeric array
+compute a histogram with fixed width bins
+format a known number of categories as strings
+make an http(s ) query and return the results .
+"generate a greedy decoding parsing of a sent object with list of [ word , tag ] return : parse tree"
+function takes a value and kd . function fits the value to a hill function with n = power and kd and returns the fraction bound .
+function takes a value between two limits ( as a tuple ) and returns the value normalized by the limits to be between 0 and 1
+function takes a value between 0 and 1 and normalizes it between the limits in lims
+create all database tables .
+replaces the serverproxy class in the xmlrpclib library with a fake class .
+clears the application state .
+creates a test runner script and pushes to the device .
+returns a list of all tests available in the test suite .
+spawn the test process .
+install the test package to the device .
+parses a raw test list as provided by --gtest_list_tests .
+private slot to handle the activation of a keyword entry .
+private slot to filter the indices according to the given filter .
+private slot to enable the search edit .
+private slot to enable the search edit .
+protected method handling focus in events .
+public method called to filter the event queue .
+converts fields of c{ppc } from external to internal indexing .
+help message with minimal config
+help message with example config
+complain about invalid arguments
+complain about invalid arguments
+"returns the size of a release ( in bytes ) as given by the nzb , compressed ."
+"returns a json - like python dict of nzb contents , including extra information such as a list of any nfos / rars that the nzb references ."
+"create the nzb , store it in gridfs and return the id to be linked to the release ."
+import an nzb and directly load it into releases .

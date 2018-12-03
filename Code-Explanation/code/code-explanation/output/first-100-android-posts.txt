@@ -1,0 +1,3813 @@
+===UCLA===
+PostId: 46766
+Score: 32
+Accepted: 1
+ViewCount: 22302
+Tags: <android><overlay><android-mapview>
+<p>For the sake of completeness I'll repeat the discussion on Reto's post over at the <a href="http://groups.google.com/group/android-developers/browse_thread/thread/36fe0648dabfe745#">Android Groups</a> here.</p>
+
+<p>It seems that if you set the bounds on your drawable it does the trick:</p>
+
+<pre><code>Drawable defaultMarker = r.getDrawable(R.drawable.icon);
+
+// You HAVE to specify the bounds! It seems like the markers are drawn
+// through Drawable.draw(Canvas) and therefore must have its bounds set
+// before drawing.
+defaultMarker.setBounds(0, 0, defaultMarker.getIntrinsicWidth(),
+    defaultMarker.getIntrinsicHeight());
+
+MyItemizedOverlay markers = new MyItemizedOverlay(defaultMarker);
+overlays.add(markers);
+</code></pre>
+
+<p>Btw, the above is shamelessly ripped from the demo at <a href="http://www.marcelp.info/2008/09/01/android-itemizedoverlay-demo/">MarcelP.info</a>. Also see <a href="http://androidguys.com/?p=1413">here</a> for a good howto.</p>
+
+===UCLA===
+PostId: 121853
+Score: 31
+Accepted: 1
+ViewCount: 12907
+Tags: <java><android><multithreading>
+<p>Share a java.lang.Object between the two threads, whose sole purpose is to tell the worker thread when it can continue its work.  Whenever the worker thread reaches a point where it should sleep, it does this:</p>
+
+<pre><code>stick.wait();
+</code></pre>
+
+<p>When the view thread finishes its onDraw work, it calls this:</p>
+
+<pre><code>stick.notify();
+</code></pre>
+
+<p>Note the requirement that the view thread owns the monitor on the object.  In your case, this should be fairly simple to enforce with a small sync block:</p>
+
+<pre><code>void onDraw() {
+  ...
+  synchronized (stick) {
+    stick.notify();
+  }
+} // end onDraw()
+</code></pre>
+
+<p>Consult the javadoc for java.lang.Object on these methods (and notifyAll, just in case); they're very well written.  </p>
+
+===UCLA===
+PostId: 151940
+Score: 1744
+Accepted: 1
+ViewCount: 499383
+Tags: <android><android-activity><application-state>
+<p>You need to override <code>onSaveInstanceState(Bundle savedInstanceState)</code> and write the application state values you want to change to the <code>Bundle</code> parameter like this:</p>
+
+<pre><code>@Override
+public void onSaveInstanceState(Bundle savedInstanceState) {
+  super.onSaveInstanceState(savedInstanceState);
+  // Save UI state changes to the savedInstanceState.
+  // This bundle will be passed to onCreate if the process is
+  // killed and restarted.
+  savedInstanceState.putBoolean("MyBoolean", true);
+  savedInstanceState.putDouble("myDouble", 1.9);
+  savedInstanceState.putInt("MyInt", 1);
+  savedInstanceState.putString("MyString", "Welcome back to Android");
+  // etc.
+}
+</code></pre>
+
+<p>The Bundle is essentially a way of storing a NVP ("Name-Value Pair") map, and it will get passed in to <code>onCreate()</code> and also <code>onRestoreInstanceState()</code> where you'd extract the values like this:</p>
+
+<pre><code>@Override
+public void onRestoreInstanceState(Bundle savedInstanceState) {
+  super.onRestoreInstanceState(savedInstanceState);
+  // Restore UI state from the savedInstanceState.
+  // This bundle has also been passed to onCreate.
+  boolean myBoolean = savedInstanceState.getBoolean("MyBoolean");
+  double myDouble = savedInstanceState.getDouble("myDouble");
+  int myInt = savedInstanceState.getInt("MyInt");
+  String myString = savedInstanceState.getString("MyString");
+}
+</code></pre>
+
+<p>You would usually use this technique to store instance values for your application (selections, unsaved text, etc.).</p>
+
+===UCLA===
+PostId: 238297
+Score: 236
+Accepted: 1
+ViewCount: 58358
+Tags: <android><menu>
+<p><a href="http://developer.android.com/reference/android/content/ClipboardManager.html">http://developer.android.com/reference/android/content/ClipboardManager.html</a></p>
+
+<p>Use <code>ClipboardManager.setPrimaryClip</code> method:</p>
+
+<pre><code>ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
+ClipData clip = ClipData.newPlainText("label", "Text to copy");
+clipboard.setPrimaryClip(clip);
+</code></pre>
+
+===UCLA===
+PostId: 280237
+Score: 19
+Accepted: 0
+ViewCount: 42322
+Tags: <android><android-mapview>
+<p>The trick here is to place another Layout container where you want to put the ZoomControls and then insert the ZoomControls into that.</p>
+
+<p>The real trick is to use the <code>RelativeLayout</code> rather than <code>LinearLayout</code> to position the elements, as shown in this sample <code>layout.xml</code>:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"&gt; 
+  &lt;com.google.android.maps.MapView
+    android:id="@+id/myMapView"
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"
+    android:enabled="true"
+    android:clickable="true"
+    android:apiKey="MY_MAP_API_KEY"
+  /&gt;
+  &lt;LinearLayout android:id="@+id/layout_zoom" 
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content" 
+    android:layout_alignParentBottom="true" 
+    android:layout_centerHorizontal="true" 
+  /&gt; 
+&lt;/RelativeLayout&gt;
+</code></pre>
+
+<p>The *layout_zoom* LinearLayout element is positioned in the bottom center of the screen, placing it over the middle/bottom of the <code>MapView</code>. </p>
+
+<p>Then within your Activity's <code>onCreate</code>, get a reference to the *layout_zoom* element and insert the ZoomControl into it, much like you've already done:</p>
+
+<pre><code>LinearLayout zoomLayout =(LinearLayout)findViewById(R.id.layout_zoom);  
+View zoomView = myMapView.getZoomControls(); 
+zoomLayout.addView(zoomView, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)); 
+myMapView.displayZoomControls(true);
+</code></pre>
+
+<p>The ZoomControls should now appear on a long click, without stealing the map touch events.</p>
+
+===UCLA===
+PostId: 325159
+Score: 4
+Accepted: 0
+ViewCount: 42322
+Tags: <android><android-mapview>
+<p>Reto : thanks for your reply, but the idea was to do it <em>without</em> using XML layouts.</p>
+
+<p>I eventually worked out the problem.  Because a MapView is a subclass of ViewGroup, you can easily add child views (like the zoom controls).  All you need is a MapView.LayoutParams instance and you're good to go.  I did something like this (puts zoom controls in the bottom center of the mapview).</p>
+
+<pre><code>  // layout to insert zoomcontrols at the bottom center of a mapview
+  MapView.LayoutParams params = MapView.LayoutParams(
+    LayoutParams.WRAP_CONTENT,
+    LayoutParams.WRAP_CONTENT,
+    mapViewWidth / 2, mapViewHeight,
+    MapView.LayoutParams.BOTTOM_CENTER);
+
+  // add zoom controls
+  mapView.addView(mapView.getZoomControls(), params);
+</code></pre>
+
+===UCLA===
+PostId: 340691
+Score: -7
+Accepted: 0
+ViewCount: 113632
+Tags: <android><android-listview>
+<p>This assumes you know the position of the element in the ListView :</p>
+
+<pre><code>  View element = listView.getListAdapter().getView(position, null, null);
+</code></pre>
+
+<p>Then you should be able to call getLeft() and getTop() to determine the elements on screen position.</p>
+
+===UCLA===
+PostId: 385806
+Score: 4
+Accepted: 0
+ViewCount: 14233
+Tags: <java><android><dns>
+<p>I don't think it's possible for general case. For WiFi I found this:</p>
+
+<pre><code>WiFiManager wifi = (WifiManager) getSystemService(WIFI_SERVICE); 
+DhcpInfo info = wifi.getDhcpInfo();
+</code></pre>
+
+===UCLA===
+PostId: 426241
+Score: 87
+Accepted: 0
+ViewCount: 346142
+Tags: <java><android><web-services><soap><wsdl>
+<p><code>org.apache.http.impl.client.DefaultHttpClient</code> comes in the Android SDK by default. That'll get you connected to the WSDL.</p>
+
+<pre><code>HttpClient httpClient = new DefaultHttpClient();
+HttpContext localContext = new BasicHttpContext();
+HttpGet httpGet = new HttpGet("http://www.example.com/" + URL);
+HttpResponse response = httpClient.execute(httpGet, localContext);
+</code></pre>
+
+===UCLA===
+PostId: 436162
+Score: 38
+Accepted: 1
+ViewCount: 51257
+Tags: <android><sqlite><prepared-statement>
+<p>I use prepared statements in Android all the time, it's quite simple :</p>
+
+<pre><code>SQLiteDatabase db = dbHelper.getWritableDatabase();
+SQLiteStatement stmt = db.compileStatement("SELECT * FROM Country WHERE code = ?");
+stmt.bindString(1, "US");
+stmt.execute();
+</code></pre>
+
+===UCLA===
+PostId: 436821
+Score: 72
+Accepted: 1
+ViewCount: 29327
+Tags: <android><user-interface><long-click>
+<p>On the onCreate method call <a href="http://developer.android.com/reference/android/app/Activity.html#registerForContextMenu%28android.view.View%29">registerForContextMenu</a> like this:</p>
+
+<pre><code>registerForContextMenu(getListView());
+</code></pre>
+
+<p>and then populate the menu on <a href="http://developer.android.com/reference/android/app/Activity.html#onCreateContextMenu%28android.view.ContextMenu,%20android.view.View,%20android.view.ContextMenu.ContextMenuInfo%29">onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)</a>. The menuInfo argument can provide information about which item was long-clicked in this way:</p>
+
+<pre><code>AdapterView.AdapterContextMenuInfo info;
+try {
+    info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+} catch (ClassCastException e) {
+    Log.e(TAG, "bad menuInfo", e);
+    return;
+}
+long id = getListAdapter().getItemId(info.position);
+</code></pre>
+
+<p>and you add menu items in the usual way calling <a href="http://developer.android.com/reference/android/view/Menu.html#add%28int,%20int,%20int,%20java.lang.CharSequence%29">menu.add</a>:</p>
+
+<pre><code>menu.add(0, MENU_ITEM_ID, 0, R.string.menu_string);
+</code></pre>
+
+<p>and when the user picks an option, <a href="http://developer.android.com/reference/android/app/Activity.html#onContextItemSelected%28android.view.MenuItem%29">onContextItemSelected</a> is called. Also  <a href="http://developer.android.com/reference/android/app/Activity.html#onMenuItemSelected%28int,%20android.view.MenuItem%29">onMenuItemSelected</a> and this fact is not explicitly explained in the documentation except to say that you use the other method to receive the calls from the context menu; just be aware, don't share ids.</p>
+
+<p>On onContextItemSelected you can get ahold of the MenuInfo and thus the id of the item selected by calling <a href="http://developer.android.com/reference/android/view/MenuItem.html#getMenuInfo%28%29">getMenuInfo()</a>:</p>
+
+<pre><code>try {
+    info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+} catch (ClassCastException e) {
+    Log.e(TAG, "bad menuInfo", e);
+    return false;
+}
+long id = getListAdapter().getItemId(info.position);
+</code></pre>
+
+===UCLA===
+PostId: 449824
+Score: 149
+Accepted: 1
+ViewCount: 64337
+Tags: <android><android-intent><android-activity><exit>
+<p>I'll focus on answering how to resolve your workround so that it behaves as you want.</p>
+
+<p>To capture actions performed on one Activity within another requires three steps.</p>
+
+<p>Launch the secondary Activity (your 'camera Activity') as a subactivity by using <code>startActivityForResult</code> instead of <code>startActivity</code>.</p>
+
+<pre><code>Intent i = new Intent(this,CameraActivity.class);    
+startActivityForResult(i, STATIC_INTEGER_VALUE);
+</code></pre>
+
+<p>Within the subactivity (camera Activity), rather than just closing the Activity when a user clicks the different tab image, you need to create a new Intent and include the index of the tab to display when you return to the parent app using the extras bundle. To pass it back to the parent call <code>setResult</code> before calling <code>finish</code> to close the camera Activity.</p>
+
+<pre><code>resultIntent = new Intent(null);
+resultIntent.putExtra(PUBLIC_STATIC_STRING_IDENTIFIER, tabIndexValue);
+setResult(Activity.RESULT_OK, resultIntent);
+finish();
+</code></pre>
+
+<p>The final step is in the calling Activity, override <code>onActivityResult</code> to listen for callbacks from the camera Activity. Get the extra from the returned Intent to determine the index of the tab you should be displaying.</p>
+
+<pre><code>@Override 
+public void onActivityResult(int requestCode, int resultCode, Intent data) {     
+  super.onActivityResult(requestCode, resultCode, data); 
+  switch(requestCode) { 
+    case (STATIC_INTEGER_VALUE) : { 
+      if (resultCode == Activity.RESULT_OK) { 
+      int tabIndex = data.getIntExtra(PUBLIC_STATIC_STRING_IDENTIFIER);
+      // TODO Switch tabs using the index.
+      } 
+      break; 
+    } 
+  } 
+}
+</code></pre>
+
+===UCLA===
+PostId: 454806
+Score: 16
+Accepted: 1
+ViewCount: 6351
+Tags: <java><android><popup><timer>
+<p>You're trying to show a text message in a popup for a short period of time on the screen?</p>
+
+<p>For these kind of alerts toasts are great:</p>
+
+<pre><code>Toast.makeText(this, "Match!", Toast.LENGTH_LONG).show();
+</code></pre>
+
+<p>Is that what you are looking for?
+<a href="http://code.google.com/android/reference/android/widget/Toast.html#makeText(android.content.Context,%20java.lang.CharSequence,%20int)">Here is the Java Doc.</a></p>
+
+===UCLA===
+PostId: 456918
+Score: 726
+Accepted: 1
+ViewCount: 302591
+Tags: <android><rotation><android-activity>
+<p><strong>Using the Application Class</strong></p>
+
+<p>Depending on what you're doing in your initialization you could consider creating a new class that extends <code>Application</code> and moving your initialization code into an overridden <code>onCreate</code> method within that class.</p>
+
+<pre><code>public class MyApplicationClass extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    // TODO Put your application initialization code here.
+  }
+}
+</code></pre>
+
+<p>The <code>onCreate</code> in the application class is only called when the entire application is created, so the Activity restarts on orientation or keyboard visibility changes won't trigger it.</p>
+
+<p>It's good practice to expose the instance of this class as a singleton and exposing the application variables you're initializing using getters and setters.</p>
+
+<p><em>NOTE: You'll need to specify the name of your new Application class in the manifest for it to be registered and used:</em></p>
+
+<pre><code>&lt;application
+    android:name="com.you.yourapp.MyApplicationClass"
+</code></pre>
+
+<p><strong>Reacting to Configuration Changes</strong> <em>[UPDATE: this is deprecated since API 13; <a href="http://www.androiddesignpatterns.com/2013/04/retaining-objects-across-config-changes.html">see the recommended alternative</a>]</em></p>
+
+<p>As a further alternative, you can have your application listen for events that would cause a restart – like orientation and keyboard visibility changes – and handle them within your Activity.</p>
+
+<p>Start by adding the <code>android:configChanges</code> node to your Activity's manifest node</p>
+
+<pre><code>android:configChanges="keyboardHidden|orientation"
+</code></pre>
+
+<p>or for <a href="http://stackoverflow.com/a/9550231/2291">Android 3.2 (API level 13) and newer</a>:</p>
+
+<pre><code>android:configChanges="keyboardHidden|orientation|screenSize"
+</code></pre>
+
+<p>Then within the Activity override the <code>onConfigurationChanged</code> method and call <code>setContentView</code> to force the GUI layout to be re-done in the new orientation.</p>
+
+<pre><code>@Override
+public void onConfigurationChanged(Configuration newConfig) {
+  super.onConfigurationChanged(newConfig);
+  setContentView(R.layout.myLayout);
+}
+</code></pre>
+
+===UCLA===
+PostId: 456941
+Score: 182
+Accepted: 1
+ViewCount: 297013
+Tags: <android><date><time><formatting><format>
+<p>Use the standard Java DateFormat class.</p>
+
+<p>For example to display the current date and time do the following:</p>
+
+<pre><code>Date date = new Date(location.getTime());
+DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(getApplicationContext());
+mTimeText.setText("Time: " + dateFormat.format(date));
+</code></pre>
+
+<p>You can initialise a Date object with your own values, however you should be aware that the constructors have been deprecated and you should really be using a Java Calendar object.</p>
+
+===UCLA===
+PostId: 460556
+Score: 35
+Accepted: 1
+ViewCount: 13174
+Tags: <android><text><popup><android-edittext>
+<p>The easiest solution to your problem is to display your <code>EditText</code> within a separate <code>dialog</code> themed Activity that you launch from within your main (portrait-fixed) Activity. </p>
+
+<p>The EditText Activity shouldn't have its orientation fixed, so it will rotate as you'd expect when you slide out the keyboard. </p>
+
+<p><strong>Creating the Text Entry Activity</strong></p>
+
+<p>Create a new Activity the contains only the EditText View and anything else you want to include (probably OK / Cancel buttons and maybe a label?). Within the manifest set its theme to <code>Theme.Dialog</code>.</p>
+
+<pre><code>&lt;activity android:name="TextEntryActivity" 
+          android:label="My Activity" 
+          android:theme="@android:style/Theme.Dialog"/&gt;
+</code></pre>
+
+<p>Fogging or Blurring the Activities behind a dialog is done by modifying the Window properties of the foreground Activity (your text entry dialog). Within it's onCreate method use <code>getWindow().setFlags</code> to apply blurring to any background Activities.</p>
+
+<pre><code>getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,  
+                     WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+</code></pre>
+
+<p><strong>Launching and Reading Entered Values from the Text Entry Activity</strong></p>
+
+<p>Use <code>startActivityForResult</code> to launch the text entry Activity. Within that Activity call <code>setResult</code> to return the text string entered within the returned intent using the techniques described in <a href="http://stackoverflow.com/questions/449484/android-capturing-the-return-of-an-activity#449824">this post</a>.</p>
+
+<p>Override the <code>onActivityResult</code> method to listen for the result from the sub Activity.</p>
+
+<p><strong>Triggering Launch on Keyboard Exposed</strong></p>
+
+<p>You can launch the text entry Activity whenever you want, but if you want to always display it when the keyboard is exposed you can capture this event explicitely.</p>
+
+<p>Start by adding the <code>android:configChanges</code> attribute to the portrait Activity's manifest entry. It should be registered to listen for <code>keyboardHidden</code>.</p>
+
+<pre><code>android:configChanges="keyboardHidden"
+</code></pre>
+
+<p>Within that Activity, override <code>onConfigurationChanged</code> to launch the text entry Activity.</p>
+
+<pre><code>@Override
+public void onConfigurationChanged(Configuration newConfig) {  
+  Intent i = new Intent(this,TextEntryActivity.class);    
+  startActivityForResult(i, STATIC_INTEGER_VALUE);
+}
+</code></pre>
+
+<p>You may want to check to confirm the keyboard is being exposed (rather than hidden) using the newConfig variable before launching the text entry Activity.</p>
+
+<p>You may also want to use the same technique to automatically return from the text entry activity when the keyboard is hidden.</p>
+
+===UCLA===
+PostId: 460927
+Score: 44
+Accepted: 0
+ViewCount: 149709
+Tags: <android>
+<p>I'd start with something like this (and if there is something wrong with my code, I'd of course appreciate any comment):</p>
+
+<pre><code>public class ItemsList extends ListActivity {
+
+private ItemsAdapter adapter;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    setContentView(R.layout.items_list);
+
+    this.adapter = new ItemsAdapter(this, R.layout.items_list_item, ItemManager.getLoadedItems());
+    setListAdapter(this.adapter);
+}
+
+private class ItemsAdapter extends ArrayAdapter&lt;Item&gt; {
+
+    private Item[] items;
+
+    public ItemsAdapter(Context context, int textViewResourceId, Item[] items) {
+        super(context, textViewResourceId, items);
+        this.items = items;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View v = convertView;
+        if (v == null) {
+            LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            v = vi.inflate(R.layout.items_list_item, null);
+        }
+
+        Item it = items[position];
+        if (it != null) {
+            ImageView iv = (ImageView) v.findViewById(R.id.list_item_image);
+            if (iv != null) {
+                iv.setImageDrawable(it.getImage());
+            }
+        }
+
+        return v;
+    }
+}
+
+@Override
+protected void onListItemClick(ListView l, View v, int position, long id) {
+    this.adapter.getItem(position).click(this.getApplicationContext());
+}
+}
+</code></pre>
+
+<p>E.g. extending ArrayAdapter with own type of Items (holding information about your pictures) and overriden <code>getView()</code> method, that prepares view for items within list. There is also method <code>add()</code> on ArrayAdapter to add items to the end of the list.</p>
+
+<p><code>R.layout.items_list</code> is simple layout with <code>ListView</code></p>
+
+<p><code>R.layout.items_list_item</code> is layout representing one item in list</p>
+
+===UCLA===
+PostId: 472463
+Score: 32
+Accepted: 0
+ViewCount: 90227
+Tags: <android><reverse-geocoding><street-address>
+<p>It looks like there's two things happening here.</p>
+
+<p>1) You've missed the <code>new</code> keyword from before calling the constructor.</p>
+
+<p>2) The parameter you're passing in to the Geocoder constructor is incorrect. You're passing in a <code>Locale</code> where it's expecting a <code>Context</code>.</p>
+
+<p>There are two <code>Geocoder</code> constructors, both of which require a <code>Context</code>, and one also taking a <code>Locale</code>:</p>
+
+<pre><code>Geocoder(Context context, Locale locale)
+Geocoder(Context context)
+</code></pre>
+
+<p><strong>Solution</strong></p>
+
+<p>Modify your code to pass in a valid Context and include <code>new</code> and you should be good to go.</p>
+
+<pre><code>Geocoder myLocation = new Geocoder(getApplicationContext(), Locale.getDefault());   
+List&lt;Address&gt; myList = myLocation.getFromLocation(latPoint, lngPoint, 1);
+</code></pre>
+
+<p><strong>Note</strong></p>
+
+<p>If you're still having problems it may be a permissioning issue. Geocoding implicitly uses the Internet to perform the lookups, so your application will require an <code>INTERNET</code> uses-permission tag in your manifest. </p>
+
+<p>Add the following uses-permission node within the <code>manifest</code> node of your manifest.</p>
+
+<pre><code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+</code></pre>
+
+===UCLA===
+PostId: 475001
+Score: 2
+Accepted: 0
+ViewCount: 90227
+Tags: <android><reverse-geocoding><street-address>
+<p>Well, I am still stumped.  So here is more code. </p>
+
+<p>Before I leave my map, I call <code>SaveLocation(myMapView,myMapController);</code> This is what ends up calling my geocoding information.</p>
+
+<p>But since <code>getFromLocation</code> can throw an <code>IOException</code>, I had to do the following to call SaveLocation</p>
+
+<pre><code>try
+{
+    SaveLocation(myMapView,myMapController);
+}
+catch (IOException e) 
+{
+    // TODO Auto-generated catch block
+    e.printStackTrace();
+}
+</code></pre>
+
+<p>Then I have to change SaveLocation by saying it throws IOExceptions : </p>
+
+<pre><code> public void SaveLocation(MapView mv, MapController mc) throws IOException{
+    //I do this : 
+    Geocoder myLocation = new Geocoder(getApplicationContext(), Locale.getDefault());   
+    List myList = myLocation.getFromLocation(latPoint, lngPoint, 1);
+//...
+    }
+</code></pre>
+
+<p>And it crashes every time.</p>
+
+===UCLA===
+PostId: 477000
+Score: 54
+Accepted: 1
+ViewCount: 90227
+Tags: <android><reverse-geocoding><street-address>
+<p>The following code snippet is doing it for me (lat and lng are doubles declared above this bit):</p>
+
+<pre><code>Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+List&lt;Address&gt; addresses = geocoder.getFromLocation(lat, lng, 1);
+</code></pre>
+
+===UCLA===
+PostId: 524191
+Score: 23
+Accepted: 1
+ViewCount: 10449
+Tags: <android><user-interface><integer>
+<p>The NumberPicker widget is probably what you want.  Unfortunatly it's located in com.android.internal.Widget.NumberPicker which we cannot get to through normal means.</p>
+
+<p>There are two ways to use it:</p>
+
+<ol>
+<li>Copy the code from android source</li>
+<li>Use reflection to access the widget</li>
+</ol>
+
+<p>Here's the xml for using it in a layout:</p>
+
+<pre><code>&lt;com.android.internal.widget.NumberPicker
+    android:id="@+id/picker"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"/&gt;
+</code></pre>
+
+<p>Here's the reflection to set the NumberPicker settings (I have not tested this):</p>
+
+<pre><code>Object o = findViewById(R.id.picker);
+Class c = o.getClass();
+try 
+{
+    Method m = c.getMethod("setRange", int.class, int.class);
+    m.invoke(o, 0, 9);
+} 
+catch (Exception e) 
+{
+    Log.e("", e.getMessage());
+}
+</code></pre>
+
+<p>Since it's an internal widget and not in the SDK, future compatibility could be broken if you use reflection.  It would be safest to roll your own from the source.</p>
+
+<p>The original source for this informaiton is here:</p>
+
+<p><a href="http://groups.google.com/group/android-developers/browse_frm/thread/65da9820998fddc9/6151cc9800e6a04d#6151cc9800e6a04d">http://groups.google.com/group/android-developers/browse_frm/thread/65da9820998fddc9/6151cc9800e6a04d#6151cc9800e6a04d</a></p>
+
+===UCLA===
+PostId: 526604
+Score: 76
+Accepted: 1
+ViewCount: 57921
+Tags: <android><time><widget><chronometer>
+<p>If you look at the source of the Chronometer class, you'll see that it doesn't store the elapsed time in a field and it calculates it internally every time it needs to update the display.</p>
+
+<p>However it's relatively easy to do the same in your own code:</p>
+
+<pre><code>long elapsedMillis = SystemClock.elapsedRealtime() - chronometerInstance.getBase();
+</code></pre>
+
+<p>This assumes that you have started your clock something like this:</p>
+
+<pre><code>chronometerInstance.setBase(SystemClock.elapsedRealtime());
+chronometerInstance.start();
+</code></pre>
+
+<p>Here's a full example:</p>
+
+<pre><code>public class ChronoExample extends Activity {
+Chronometer mChronometer;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    LinearLayout layout = new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+
+    mChronometer = new Chronometer(this);
+    layout.addView(mChronometer);
+
+    Button startButton = new Button(this);
+    startButton.setText("Start");
+    startButton.setOnClickListener(mStartListener);
+    layout.addView(startButton);
+
+    Button stopButton = new Button(this);
+    stopButton.setText("Stop");
+    stopButton.setOnClickListener(mStopListener);
+    layout.addView(stopButton);
+
+    Button resetButton = new Button(this);
+    resetButton.setText("Reset");
+    resetButton.setOnClickListener(mResetListener);
+    layout.addView(resetButton);        
+
+    setContentView(layout);
+}
+
+private void showElapsedTime() {
+    long elapsedMillis = SystemClock.elapsedRealtime() - mChronometer.getBase();            
+    Toast.makeText(ChronoExample.this, "Elapsed milliseconds: " + elapsedMillis, 
+            Toast.LENGTH_SHORT).show();
+}
+
+View.OnClickListener mStartListener = new OnClickListener() {
+    public void onClick(View v) {
+        mChronometer.start();
+        showElapsedTime();
+    }
+};
+
+View.OnClickListener mStopListener = new OnClickListener() {
+    public void onClick(View v) {
+        mChronometer.stop();
+        showElapsedTime();
+    }
+};
+
+View.OnClickListener mResetListener = new OnClickListener() {
+    public void onClick(View v) {
+        mChronometer.setBase(SystemClock.elapsedRealtime());
+        showElapsedTime();
+    }
+};
+}
+</code></pre>
+
+<p>One somewhat confusing thing about Chronometer is that you can't really use it as a stopwatch that gets started, stopped and restarted again. When it's running, it will always show the time elapsed since you last reset it, <em>no matter how many times and for how long you have stopped it in the meantime</em>. When it is stopped, it simply stops updating the display.</p>
+
+<p>If you need something like a stopwatch you'll have to subclass Chronometer or maybe create your own version using the <a href="http://www.google.com/codesearch/p?hl=en#uX1GffpyOZk/core/java/android/widget/Chronometer.java&amp;q=android%20chronometer">source</a>.</p>
+
+<p><img src="http://farm4.static.flickr.com/3301/3273256911_192eae1767_o.png" alt="alt text" /></p>
+
+===UCLA===
+PostId: 527228
+Score: 17
+Accepted: 1
+ViewCount: 30453
+Tags: <android><user-interface><service><broadcastreceiver><intentfilter>
+<p>Your best bet would seem to be using a <code>BroadcastReceiver</code>. You can create a new BroadcastReceiver that listens for the Intent to trigger your notification and start your service like this:</p>
+
+<pre><code>public class MyIntentReceiver extends BroadcastReceiver {    
+  @Override 
+  public void onReceive(Context _context, Intent _intent) {
+    if (_intent.getAction().equals(MY_INTENT)) {
+      // TODO Broadcast a notification
+      _context.startService(new Intent(_context, MyService.class));
+    }
+  }    
+}
+</code></pre>
+
+<p>And you can register this IntentReceiver directly in the application Manifest without needing to include it within an Activity:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.domain.myapplication"&gt;
+  &lt;application android:icon="@drawable/icon" android:label="@string/app_name"&gt;
+    &lt;service android:enabled="true" android:name="MyService"&gt;&lt;/service&gt;
+    &lt;receiver android:enabled="true" android:name="MyIntentReceiver"&gt;
+      &lt;intent-filter&gt;
+        &lt;action android:name="MY_INTENT" /&gt;
+      &lt;/intent-filter&gt;
+    &lt;/receiver&gt;
+  &lt;/application&gt;
+&lt;/manifest&gt; 
+</code></pre>
+
+===UCLA===
+PostId: 531465
+Score: 13
+Accepted: 1
+ViewCount: 13713
+Tags: <android><location><distance>
+<p>You should Modify lines:</p>
+
+<pre><code>aLocation.setLatitude(myLocation.getLatitudeE6() / 1e6);
+aLocation.setLongitude(myLocation.getLongitudeE6() / 1e6);
+</code></pre>
+
+<p>And remove the lines:</p>
+
+<pre><code>aLocation.set(aLocation);
+bLocation.set(bLocation);
+</code></pre>
+
+===UCLA===
+PostId: 551151
+Score: 83
+Accepted: 1
+ViewCount: 34827
+Tags: <android><android-image>
+<p>You can use<code> startActivityForResult</code>, passing in an Intent that describes an action you want completed and and data source to perform the action on.</p>
+
+<p>Luckily for you, Android includes an Action for picking things: <code>Intent.ACTION__PICK</code> and a data source containing pictures: 
+<code>android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI</code> for images on the local device or
+<code>android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI</code> for images on the SD card.</p>
+
+<p>Call <code>startActivityForResult</code> passing in the pick action and the images you want the user to select from like this:</p>
+
+<pre><code>startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), SELECT_IMAGE);
+</code></pre>
+
+<p>Then override <code>onActivityResult</code> to listen for the user having made a selection.</p>
+
+<pre><code>@Override
+public void onActivityResult(int requestCode, int resultCode, Intent data) {
+  super.onActivityResult(requestCode, resultCode, data);
+  if (requestCode == SELECT_IMAGE)
+    if (resultCode == Activity.RESULT_OK) {
+      Uri selectedImage = data.getData();
+      // TODO Do something with the select image URI
+    } 
+}
+</code></pre>
+
+<p>Once you have the image Uri you can use it to access the image and do whatever you need to do with it.</p>
+
+===UCLA===
+PostId: 552380
+Score: 113
+Accepted: 1
+ViewCount: 40209
+Tags: <android>
+<p>I assume by preferences you are referring to your application's preferences and not Android phone settings.</p>
+
+<p>To store preferences between runs of you application you need to do the following</p>
+
+<ol>
+<li><p>Create a SharedPreferences object</p>
+
+<pre><code>SharedPreferences settings = getSharedPreferences(String n, MODE_PRIVATE);
+</code></pre>
+
+<p><em>String n identifies your preferences and the second argument is the mode they'll be accessed</em></p></li>
+<li><p>Instantiate an Editor object</p>
+
+<pre><code>SharedPreferences.Editor editor = settings.edit();
+</code></pre>
+
+<p><em>Note: do not try settings.editor.edit(), this will not make a persistent object and the code below will not work</em></p></li>
+<li><p>Write your preferences to the buffer</p>
+
+<pre><code>editor.put...(String, value)
+</code></pre>
+
+<p><em>There are numerous put function, putString, putBoolean, etc.  The String is the key ("version", "good run") and the value is the value ("1.5.2", true)</em></p></li>
+<li><p>Flush the buffer</p>
+
+<pre><code>editor.commit();
+</code></pre>
+
+<p><em>This actually writes you put to the preferences.  If your app crashes before this line then the preferences will not be written.  There is also a documented bug:  commit() is supposed to return a boolean indicating success or failure.  Last I checked it always returned false.</em></p></li>
+</ol>
+
+<p>These preferences will by stored on the phone and will only be accessible to your application.</p>
+
+<p>More documentation is <a href="http://developer.android.com/guide/topics/data/data-storage.html">here</a></p>
+
+===UCLA===
+PostId: 552403
+Score: 24
+Accepted: 0
+ViewCount: 469733
+Tags: <android><image><bitmap><out-of-memory><android-bitmap>
+<p>I did the following to take the image and resize it on the fly. Hope this helps</p>
+
+<pre><code>Bitmap bm;
+bm = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filepath), 100, 100, true);
+mPicture = new ImageView(context);
+mPicture.setImageBitmap(bm);    
+</code></pre>
+
+===UCLA===
+PostId: 559781
+Score: 830
+Accepted: 1
+ViewCount: 461595
+Tags: <android><image><url><android-listview><universal-image-loader>
+<p>Here's what I created to hold the images that my app is currently displaying. Please note that the "Log" object in use here is my custom wrapper around the final Log class inside Android.</p>
+
+<pre><code>package com.wilson.android.library;
+
+/*
+ Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+import java.io.IOException;
+
+public class DrawableManager {
+    private final Map&lt;String, Drawable&gt; drawableMap;
+
+    public DrawableManager() {
+        drawableMap = new HashMap&lt;String, Drawable&gt;();
+    }
+
+    public Drawable fetchDrawable(String urlString) {
+        if (drawableMap.containsKey(urlString)) {
+            return drawableMap.get(urlString);
+        }
+
+        Log.d(this.getClass().getSimpleName(), "image url:" + urlString);
+        try {
+            InputStream is = fetch(urlString);
+            Drawable drawable = Drawable.createFromStream(is, "src");
+
+
+            if (drawable != null) {
+                drawableMap.put(urlString, drawable);
+                Log.d(this.getClass().getSimpleName(), "got a thumbnail drawable: " + drawable.getBounds() + ", "
+                        + drawable.getIntrinsicHeight() + "," + drawable.getIntrinsicWidth() + ", "
+                        + drawable.getMinimumHeight() + "," + drawable.getMinimumWidth());
+            } else {
+              Log.w(this.getClass().getSimpleName(), "could not get thumbnail");
+            }
+
+            return drawable;
+        } catch (MalformedURLException e) {
+            Log.e(this.getClass().getSimpleName(), "fetchDrawable failed", e);
+            return null;
+        } catch (IOException e) {
+            Log.e(this.getClass().getSimpleName(), "fetchDrawable failed", e);
+            return null;
+        }
+    }
+
+    public void fetchDrawableOnThread(final String urlString, final ImageView imageView) {
+        if (drawableMap.containsKey(urlString)) {
+            imageView.setImageDrawable(drawableMap.get(urlString));
+        }
+
+        final Handler handler = new Handler() {
+            @Override
+            public void handleMessage(Message message) {
+                imageView.setImageDrawable((Drawable) message.obj);
+            }
+        };
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                //TODO : set imageView to a "pending" image
+                Drawable drawable = fetchDrawable(urlString);
+                Message message = handler.obtainMessage(1, drawable);
+                handler.sendMessage(message);
+            }
+        };
+        thread.start();
+    }
+
+    private InputStream fetch(String urlString) throws MalformedURLException, IOException {
+        DefaultHttpClient httpClient = new DefaultHttpClient();
+        HttpGet request = new HttpGet(urlString);
+        HttpResponse response = httpClient.execute(request);
+        return response.getEntity().getContent();
+    }
+}
+</code></pre>
+
+===UCLA===
+PostId: 560958
+Score: 80
+Accepted: 0
+ViewCount: 34225
+Tags: <java><android><user-interface><layout>
+<p>I made my own layout that does what I want, but it is quite limited at the moment. Comments and improvement suggestions are of course welcome.</p>
+
+<p>The activity:</p>
+
+<pre><code>package se.fnord.xmms2.predicate;
+
+import se.fnord.android.layout.PredicateLayout;
+import android.app.Activity;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.widget.TextView;
+
+public class Predicate extends Activity {
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        PredicateLayout l = new PredicateLayout(this);
+        for (int i = 0; i &lt; 10; i++) {
+            TextView t = new TextView(this);
+            t.setText("Hello");
+            t.setBackgroundColor(Color.RED);
+            t.setSingleLine(true);
+            l.addView(t, new PredicateLayout.LayoutParams(2, 0));
+        }
+
+        setContentView(l);
+    }
+}
+</code></pre>
+
+<p>Or in an XML layout:</p>
+
+<pre><code>&lt;se.fnord.android.layout.PredicateLayout
+    android:id="@+id/predicate_layout"
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+/&gt;
+</code></pre>
+
+<p>And the Layout:</p>
+
+<pre><code>package se.fnord.android.layout;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewGroup;
+
+/**
+ * ViewGroup that arranges child views in a similar way to text, with them laid
+ * out one line at a time and "wrapping" to the next line as needed.
+ * 
+ * Code licensed under CC-by-SA
+ *  
+ * @author Henrik Gustafsson
+ * @see http://stackoverflow.com/questions/549451/line-breaking-widget-layout-for-android
+ * @license http://creativecommons.org/licenses/by-sa/2.5/
+ *
+ */
+public class PredicateLayout extends ViewGroup {
+
+    private int line_height;
+
+    public PredicateLayout(Context context) {
+        super(context);
+    }
+
+    public PredicateLayout(Context context, AttributeSet attrs){
+        super(context, attrs);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        assert(MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED);
+
+        final int width = MeasureSpec.getSize(widthMeasureSpec);
+
+        // The next line is WRONG!!! Doesn't take into account requested MeasureSpec mode!
+        int height = MeasureSpec.getSize(heightMeasureSpec) - getPaddingTop() - getPaddingBottom();
+        final int count = getChildCount();
+        int line_height = 0;
+
+        int xpos = getPaddingLeft();
+        int ypos = getPaddingTop();
+
+        for (int i = 0; i &lt; count; i++) {
+            final View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                child.measure(
+                        MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
+                        MeasureSpec.makeMeasureSpec(height, MeasureSpec.UNSPECIFIED));
+
+                final int childw = child.getMeasuredWidth();
+                line_height = Math.max(line_height, child.getMeasuredHeight() + lp.height);
+
+                if (xpos + childw &gt; width) {
+                    xpos = getPaddingLeft();
+                    ypos += line_height;
+                }
+
+                xpos += childw + lp.width;
+            }
+        }
+        this.line_height = line_height;
+
+        if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED){
+            height = ypos + line_height;
+
+        } else if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.AT_MOST){
+            if (ypos + line_height &lt; height){
+                height = ypos + line_height;
+            }
+        }
+        setMeasuredDimension(width, height);
+    }
+
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new LayoutParams(1, 1); // default of 1px spacing
+    }
+
+    @Override
+    protected boolean checkLayoutParams(LayoutParams p) {
+        return (p instanceof LayoutParams);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        final int count = getChildCount();
+        final int width = r - l;
+        int xpos = getPaddingLeft();
+        int ypos = getPaddingTop();
+
+        for (int i = 0; i &lt; count; i++) {
+            final View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                final int childw = child.getMeasuredWidth();
+                final int childh = child.getMeasuredHeight();
+                final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                if (xpos + childw &gt; width) {
+                    xpos = getPaddingLeft();
+                    ypos += line_height;
+                }
+                child.layout(xpos, ypos, xpos + childw, ypos + childh);
+                xpos += childw + lp.width;
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>With the result:</p>
+
+<p><img src="http://fnord.se/android/01-have2.png" alt="Wrapped widgets"></p>
+
+===UCLA===
+PostId: 572015
+Score: 10
+Accepted: 0
+ViewCount: 12912
+Tags: <android><button><toggle><menuitem><togglebutton>
+<p>You could do something like the snippet below as well, originally sourced from <a href="http://www.anddev.org/">anddev.org</a></p>
+
+<pre><code>public boolean onPrepareOptionsMenu(final Menu menu) {       
+      if(super.mMapView.isTraffic()) 
+           menu.findItem(MENU_TRAFFIC_ID).setIcon(R.drawable.traffic_off_48); 
+      else 
+           menu.findItem(MENU_TRAFFIC_ID).setIcon(R.drawable.traffic_on_48); 
+
+      return super.onPrepareOptionsMenu(menu); 
+ }
+</code></pre>
+
+===UCLA===
+PostId: 572265
+Score: 6
+Accepted: 0
+ViewCount: 22401
+Tags: <android><listview><focus>
+<p>Although you specified in the xml you could try specifying in code as well.  Although i'm not sure you can set a list to not focusable and still have the list be scrollable and it's clickable.</p>
+
+<p>after your setContentView...</p>
+
+<pre><code>myListView.setFocusableInTouchMode(false);
+</code></pre>
+
+<p>You could try and inherit from the view as well and then add a little debugging code in the interim to help you find when the list actually has focus.</p>
+
+<pre><code>    myListView.setOnFocusChangeListener(new OnFocusChangeListener(){
+
+  public void onFocusChange(View v, boolean hasFocus)
+  {
+   v.setBackgroundColor(hasFocus ? Color.GRAY : Color.BLACK);
+  }
+    });
+
+    myListView.setClickable(true);
+</code></pre>
+
+===UCLA===
+PostId: 573239
+Score: 4
+Accepted: 0
+ViewCount: 134255
+Tags: <java><android><encoding><utf-8>
+<p>You can use the multi-argument constructors of the <code>URI</code> class. From the <code>URI</code> javadoc:</p>
+
+<blockquote>
+  <p>The multi-argument constructors quote illegal characters as required by the components in which they appear. The percent character ('%') is always quoted by these constructors. Any other characters are preserved.</p>
+</blockquote>
+
+<p>So if you use</p>
+
+<pre><code>URI uri = new URI("http", "www.google.com?q=a b");
+</code></pre>
+
+<p>Then you get <code>http:www.google.com?q=a%20b</code> which isn't quite right, but it's a little closer.</p>
+
+<p>If you know that your string will not have URL fragments (e.g. <a href="http://example.com/page#anchor" rel="nofollow">http://example.com/page#anchor</a>), then you can use the following code to get what you want:</p>
+
+<pre><code>String s = "http://www.google.com?q=a b";
+String[] parts = s.split(":",2);
+URI uri = new URI(parts[0], parts[1], null);
+</code></pre>
+
+<p>To be safe, you should scan the string for <code>#</code> characters, but this should get you started.</p>
+
+===UCLA===
+PostId: 576559
+Score: 16
+Accepted: 0
+ViewCount: 62863
+Tags: <java><android><download><httpurlconnection><fileoutputstream>
+<p>One problem is your reading of the buffer. If every read of the input stream is not an exact multiple of 1024 you will copy bad data.  Use:</p>
+
+<pre><code>byte[] buffer = new byte[1024];
+int len1 = 0;
+while ( (len1 = in.read(buffer)) != -1 ) {
+  f.write(buffer,0, len1);
+}
+</code></pre>
+
+===UCLA===
+PostId: 576562
+Score: 85
+Accepted: 1
+ViewCount: 62863
+Tags: <java><android><download><httpurlconnection><fileoutputstream>
+<p>I don't know if it's the only problem, but you've got a classic Java glitch in there: You're not counting on the fact that read() is <em>always</em> allowed to return fewer bytes than you ask for.  Thus, your read could get less than 1024 bytes but your write always writes out exactly 1024 bytes possibly including bytes from the previous loop iteration.</p>
+
+<p>Correct with:</p>
+
+<pre><code> while ( (len1 = in.read(buffer)) &gt; 0 ) {
+         f.write(buffer,0, len1);
+ }
+</code></pre>
+
+<p>Perhaps the higher latency networking or smaller packet sizes of 3G on Android are exacerbating the effect?</p>
+
+===UCLA===
+PostId: 587484
+Score: 1
+Accepted: 0
+ViewCount: 764
+Tags: <android><imageview>
+<p>Read this <a href="http://www.developer.com/java/j2me/article.php/10934%5F3748281%5F1" rel="nofollow">Android Image Tutorial</a>. There's an example that uses FileOutputStream to write an image, I'm sure there's FileInputStream, too. Here's <a href="http://getablogger.blogspot.com/2008/01/android-download-image-from-server-and.html" rel="nofollow">another code example</a> that downloads images and transforms them to an Inputstream that is decoded:</p>
+
+<pre><code>bmImg = BitmapFactory.decodeStream(is);
+imView.setImageBitmap(bmImg);
+</code></pre>
+
+===UCLA===
+PostId: 647165
+Score: 2
+Accepted: 0
+ViewCount: 463
+Tags: <iphone><android><user-interface><touchscreen>
+<p>One obvious problem is that nowhere do you take account of the time since the last touch. </p>
+
+<p>I would suggest you treat the players touch as an expression of desired movement on an analogue range from <code>-x/+x</code> and <code>-y/+y</code>, then perform the actual movement elsewhere based on time.</p>
+
+<p>E.g.</p>
+
+<pre><code>objectPos += objectPos + (joyPos * timeDelta * maxSpeed);
+</code></pre>
+
+<p>So if the max-speed of your object is 10ms-1 and the players finger is at 0.5 on the control pad then the object would be moving 5 meters every second. If your game is running at 10fps then each frame the object would move 0.5 meters.</p>
+
+<p>These figures are fictional, but hopefully demonstrate the need to separate control from movement and then factor in time.</p>
+
+===UCLA===
+PostId: 659298
+Score: 14
+Accepted: 0
+ViewCount: 218665
+Tags: <android><crash><stack-trace>
+<p>It is possible to handle these exceptions with <code>Thread.setDefaultUncaughtExceptionHandler()</code>, however this appears to mess with Android's method of handling exceptions. I attempted to use a handler of this nature:</p>
+
+<pre><code>private class ExceptionHandler implements Thread.UncaughtExceptionHandler {
+    @Override
+    public void uncaughtException(Thread thread, Throwable ex){
+        Log.e(Constants.TAG, "uncaught_exception_handler: uncaught exception in thread " + thread.getName(), ex);
+
+        //hack to rethrow unchecked exceptions
+        if(ex instanceof RuntimeException)
+            throw (RuntimeException)ex;
+        if(ex instanceof Error)
+            throw (Error)ex;
+
+        //this should really never happen
+        Log.e(Constants.TAG, "uncaught_exception handler: unable to rethrow checked exception");
+    }
+}
+</code></pre>
+
+<p>However, even with rethrowing the exceptions, I was unable to get the desired behavior, ie logging the exception while still allowing Android to shutdown the component it had happened it, so I gave up on it after a while.</p>
+
+===UCLA===
+PostId: 663170
+Score: 17
+Accepted: 1
+ViewCount: 18034
+Tags: <android><contact>
+<p>Use the address column. I guess the person column is ignored because people can send SMSs to phone numbers that are not in the contacts list.</p>
+
+<pre><code>// address contains the phone number
+Uri phoneUri = Uri.withAppendedPath(Contacts.Phones.CONTENT_FILTER_URL, address);
+if (phoneUri != null) {
+  Cursor phoneCursor = getContentResolver().query(phoneUri, new String[] {Phones._ID, Contacts.Phones.PERSON_ID}, null, null, null);
+  if (phoneCursor.moveToFirst()) {
+    long person = phonesCursor.getLong(1); // this is the person ID you need
+  }
+}
+</code></pre>
+
+===UCLA===
+PostId: 673014
+Score: 634
+Accepted: 1
+ViewCount: 307841
+Tags: <android><bitmap><save>
+<pre><code>FileOutputStream out = null;
+try {
+    out = new FileOutputStream(filename);
+    bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+    // PNG is a lossless format, the compression factor (100) is ignored
+} catch (Exception e) {
+    e.printStackTrace();
+} finally {
+    try {
+        if (out != null) {
+            out.close();
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+</code></pre>
+
+===UCLA===
+PostId: 686570
+Score: 88
+Accepted: 1
+ViewCount: 74630
+Tags: <java><android><multithreading><service>
+<p><strong>Addendum</strong>: The Android framework provides many helpers for one-off work, background work, etc, which may be preferable over trying to roll your own thread in many instances. As mentioned in a below post, AsyncTask is a good starting point to look into. I encourage readers to look into the framework provisions first before even beginning to think about doing their own threading.</p>
+
+<p>There are several problems in the code sample you posted I will address in order:</p>
+
+<p>1) Thread.stop() has been deprecated for quite some time now, as it can leave dependent variables in inconsistent states in some circumstances. See <a href="http://java.sun.com/j2se/1.4.2/docs/guide/misc/threadPrimitiveDeprecation.html" rel="nofollow">this Sun answer page</a> for more details (Edit: that link is now dead, see <a href="https://www.securecoding.cert.org/confluence/display/java/THI05-J.+Do+not+use+Thread.stop()+to+terminate+threads" rel="nofollow">this page for why not to use Thread.stop()</a>). A preferred method of stopping and starting a thread is as follows (assuming your thread will run somewhat indefinitely):</p>
+
+<pre><code>private volatile Thread runner;
+
+public synchronized void startThread(){
+  if(runner == null){
+    runner = new Thread(this);
+    runner.start();
+  }
+}
+
+public synchronized void stopThread(){
+  if(runner != null){
+    Thread moribund = runner;
+    runner = null;
+    moribund.interrupt();
+  }
+}
+
+public void run(){
+  while(Thread.currentThread() == runner){
+    //do stuff which can be interrupted if necessary
+  }
+}
+</code></pre>
+
+<p>This is just one example of how to stop a thread, but the takeaway is that you are responsible for exiting a thread just as you would any other method. Maintain a method of cross thread communcation (in this case a volatile variable, could also be through a mutex, etc) and within your thread logic, use that method of communication to check if you should early exit, cleanup, etc.</p>
+
+<p>2) Your measurements list is accessed by multiple threads (the event thread and your user thread) at the same time without any synchronization. It looks like you don't have to roll your own synchronization, you can use a <a href="http://developer.android.com/reference/java/util/concurrent/BlockingQueue.html" rel="nofollow">BlockingQueue</a>.</p>
+
+<p>3) You are creating a new Socket every iteration of your sending Thread. This is a rather heavyweight operation, and only really make sense if you expect measurements to be extremely infrequent (say one an hour or less). Either you want a persistent socket that is not recreated every loop of the thread, or you want a one shot runnable you can 'fire and forget' which creates a socket, sends all relevant data, and finishes. (A quick note about using a persistent Socket, socket methods which block, such as reading, cannot be interrupted by Thread.interrupt(), and so when you want to stop the thread, you must close the socket as well as calling interrupt)</p>
+
+<p>4) There is little point in throwing your own exceptions from within a Thread unless you expect to catch it somewhere else. A better solution is to log the error and if it is irrecoverable, stop the thread. A thread can stop itself with code like (in the same context as above):</p>
+
+<pre><code>public void run(){
+    while(Thread.currentThread() == runner){
+      //do stuff which can be interrupted if necessary
+
+      if(/*fatal error*/){
+        stopThread();
+        return; //optional in this case since the loop will exit anyways
+      }
+    }
+  }
+</code></pre>
+
+<p>Finally, if you want to be sure a thread exits with the rest of your application, no matter what, a good technique is to call Thread.setDaemon(true) after creation and before you start the thread. This flags the thread as a daemon thread, meaning the VM will ensure that it is automatically destroyed if there are no non-daemon threads running (such as if your app quits).</p>
+
+<p>Obeying best practices with regards to Threads should ensure that your app doesn't hang or slow down the phone, though they can be quite complex :)</p>
+
+===UCLA===
+PostId: 687453
+Score: 87
+Accepted: 1
+ViewCount: 91785
+Tags: <java><android><http><url><cookies>
+<p>It turns out that Google Android ships with Apache HttpClient 4.0, and I was able to figure out how to do it using the "Form based logon" example in the <a href="http://hc.apache.org/httpcomponents-client/examples.html">HttpClient docs</a>:</p>
+
+<p><a href="http://svn.apache.org/repos/asf/httpcomponents/httpclient/trunk/httpclient/src/examples/org/apache/http/examples/client/ClientFormLogin.java">http://svn.apache.org/repos/asf/httpcomponents/httpclient/trunk/httpclient/src/examples/org/apache/http/examples/client/ClientFormLogin.java</a></p>
+
+<p><hr /></p>
+
+<pre><code>import java.util.ArrayList;
+import java.util.List;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+
+/**
+ * A example that demonstrates how HttpClient APIs can be used to perform
+ * form-based logon.
+ */
+public class ClientFormLogin {
+
+    public static void main(String[] args) throws Exception {
+
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+
+        HttpGet httpget = new HttpGet("https://portal.sun.com/portal/dt");
+
+        HttpResponse response = httpclient.execute(httpget);
+        HttpEntity entity = response.getEntity();
+
+        System.out.println("Login form get: " + response.getStatusLine());
+        if (entity != null) {
+            entity.consumeContent();
+        }
+        System.out.println("Initial set of cookies:");
+        List&lt;Cookie&gt; cookies = httpclient.getCookieStore().getCookies();
+        if (cookies.isEmpty()) {
+            System.out.println("None");
+        } else {
+            for (int i = 0; i &lt; cookies.size(); i++) {
+                System.out.println("- " + cookies.get(i).toString());
+            }
+        }
+
+        HttpPost httpost = new HttpPost("https://portal.sun.com/amserver/UI/Login?" +
+                "org=self_registered_users&amp;" +
+                "goto=/portal/dt&amp;" +
+                "gotoOnFail=/portal/dt?error=true");
+
+        List &lt;NameValuePair&gt; nvps = new ArrayList &lt;NameValuePair&gt;();
+        nvps.add(new BasicNameValuePair("IDToken1", "username"));
+        nvps.add(new BasicNameValuePair("IDToken2", "password"));
+
+        httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+
+        response = httpclient.execute(httpost);
+        entity = response.getEntity();
+
+        System.out.println("Login form get: " + response.getStatusLine());
+        if (entity != null) {
+            entity.consumeContent();
+        }
+
+        System.out.println("Post logon cookies:");
+        cookies = httpclient.getCookieStore().getCookies();
+        if (cookies.isEmpty()) {
+            System.out.println("None");
+        } else {
+            for (int i = 0; i &lt; cookies.size(); i++) {
+                System.out.println("- " + cookies.get(i).toString());
+            }
+        }
+
+        // When HttpClient instance is no longer needed, 
+        // shut down the connection manager to ensure
+        // immediate deallocation of all system resources
+        httpclient.getConnectionManager().shutdown();        
+    }
+}
+</code></pre>
+
+===UCLA===
+PostId: 702148
+Score: 6
+Accepted: 1
+ViewCount: 1859
+Tags: <android><user-interface>
+<p>Yes. It depends what you are trying to achieve.</p>
+
+<p>It can be done <em>using</em> the standard APIs, but this functionality is not <em>part of</em> the standard APIs. That is, there is no <code>widget.DragOverHere()</code> method unless you write one.</p>
+
+<p>That said, it would not be terribly complicated to do. At a minimum, you would need to write a custom subclass of View and implement two methods: <code>onDraw(Canvas c)</code> and <code>onTouch(MotionEvent e)</code>. A rough sketch:</p>
+
+<pre><code>class MyView extends View {
+
+    int x, y;  //the x-y coordinates of the icon (top-left corner)
+    Bitmap bitmap; //the icon you are dragging around
+
+    onDraw(Canvas c) {
+      canvas.drawBitmap(x, y, bitmap);
+    }
+
+    onTouch(MotionEvent e) {
+      switch(e.getAction()) {
+      case MotionEvent.ACTION_DOWN:
+        //maybe use a different bitmap to indicate 'selected'
+        break;
+      case MotionEvent.ACTION_MOVE:
+        x = (int)e.getX();
+        y = (int)e.getY();
+        break;
+      case MotionEvent.ACTION_UP:
+        //switch back to 'unselected' bitmap
+        break;
+      }
+      invalidate(); //redraw the view
+    }
+}
+</code></pre>
+
+===UCLA===
+PostId: 708049
+Score: 3
+Accepted: 1
+ViewCount: 2602
+Tags: <java><ruby-on-rails><android><http>
+<p>I added the following to my POST request and it worked like a charm.</p>
+
+<pre><code>httppost.addHeader("Content-Type","application/json");
+</code></pre>
+
+===UCLA===
+PostId: 740335
+Score: 7
+Accepted: 0
+ViewCount: 54110
+Tags: <java><android><android-gridview><clickable-image>
+<p>I was able to get the position of the clicked image by making the position final and adding an onClick listener to the imageView.  This logs the position of the image that was clicked.</p>
+
+<pre><code>@Override
+public View getView(final int position, View convertView, ViewGroup parent) {
+  ImageView imageView;
+  if (convertView == null) {  
+    // if it's not recycled, initialize some attributes
+    imageView = new ImageView(mContext);
+    imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
+    imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+    imageView.setPadding(8, 8, 8, 8);
+
+
+    imageView.setOnClickListener(new View.OnClickListener() {
+
+      @Override
+      public void onClick(View view) {
+        Log.d("onClick","position ["+position+"]");
+      }
+
+    });
+
+  } 
+  else {
+    imageView = (ImageView) convertView;
+  }
+
+  imageView.setImageResource(mThumbIds[position]);
+  return imageView;
+}
+</code></pre>
+
+===UCLA===
+PostId: 741926
+Score: 8
+Accepted: 0
+ViewCount: 50383
+Tags: <android><3d><opengl-es>
+<p>you may export it to ASE format.
+from ASE, you can convert it to your code manually or programatically.
+You will need vertex for vertices array and faces for indices in Android.
+don't forget you have to set</p>
+
+<pre><code>    gl.glFrontFace(GL10.GL_CCW);
+</code></pre>
+
+<p>because 3ds max default is counter clockwise.</p>
+
+===UCLA===
+PostId: 742087
+Score: 30
+Accepted: 1
+ViewCount: 50383
+Tags: <android><3d><opengl-es>
+<p>That's where I got to:</p>
+
+<ul>
+<li>I've used Google's APIDemos as a starting point - there are rotating cubes in there, each specified by two arrays: vertices and indices.</li>
+<li>I've build my model using Blender and exported it as OFF file - it's a text file that lists all the vertices and then faces in terms of these vertices (indexed geometry)</li>
+<li>Then I've created a simple C++ app that takes that OFF and writes it as two XMLs containing arrays (one for vertices and one for indices)</li>
+<li>These XML files are then copied to res/values and this way I can assign the data they contain to arrays like this:<br/> 
+<code>int vertices[] = context.getResources().getIntArray(R.array.vertices);</code></li>
+<li>I also need to manually change the number of faces to be drawn in here: <code>gl.glDrawElements(GL10.GL_TRIANGLES, 212*6, GL10.GL_UNSIGNED_SHORT, mIndexBuffer);</code> - you can find that number (212 in this case) on top of the OFF file</li>
+</ul>
+
+<p>Here you can find my project page, which uses this solution:</p>
+
+<p><a href="http://code.google.com/p/vsiogap3d/">http://code.google.com/p/vsiogap3d/</a></p>
+
+===UCLA===
+PostId: 748703
+Score: 2
+Accepted: 0
+ViewCount: 6107
+Tags: <android><image><scroll>
+<p>You can use a webview which gives this to you for free. I'm not sure why but when I tried
+using the loadData method it didn't work, but using loadDataWithBaseURL with a null URL did.
+<p>
+With a webview your image can even be embedded in HTML. In the example below <code>yourContent</code> is simply a string.
+<p></p>
+
+<p>E.g.</p>
+
+<pre><code>yourView.loadDataWithBaseURL(null, yourContent, "text/html", "UTF-8", null);
+</code></pre>
+
+===UCLA===
+PostId: 755151
+Score: 253
+Accepted: 0
+ViewCount: 218665
+Tags: <android><crash><stack-trace>
+<p>For sample applications and debugging purposes, I use a simple solution that allows me to write the stacktrace to the sd card of the device and/or upload it to a server. This solution has been inspired by <a href="http://code.google.com/p/android-remote-stacktrace">http://code.google.com/p/android-remote-stacktrace</a> (specifically, the save-to-device and upload-to-server parts) and I think it solves the problem mentioned by Soonil. It's not optimal, but it works and you can improve it if you want to use it in a production application. If you decide to upload the stacktraces to the server, you can use a php script (index.php) to view them. If you're interested, you can find all the sources below - one java class for your application and two optional php scrips for the server hosting the uploaded stacktraces.</p>
+
+<p>In a Context (e.g. the main Activity), call</p>
+
+<pre><code>if(!(Thread.getDefaultUncaughtExceptionHandler() instanceof CustomExceptionHandler)) {
+    Thread.setDefaultUncaughtExceptionHandler(new CustomExceptionHandler(
+            "/sdcard/&lt;desired_local_path&gt;", "http://&lt;desired_url&gt;/upload.php"));
+}
+</code></pre>
+
+<p>CustomExceptionHandler</p>
+
+<pre><code>public class CustomExceptionHandler implements UncaughtExceptionHandler {
+
+    private UncaughtExceptionHandler defaultUEH;
+
+    private String localPath;
+
+    private String url;
+
+    /* 
+     * if any of the parameters is null, the respective functionality 
+     * will not be used 
+     */
+    public CustomExceptionHandler(String localPath, String url) {
+        this.localPath = localPath;
+        this.url = url;
+        this.defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
+    }
+
+    public void uncaughtException(Thread t, Throwable e) {
+        String timestamp = TimestampFormatter.getInstance().getTimestamp();
+        final Writer result = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(result);
+        e.printStackTrace(printWriter);
+        String stacktrace = result.toString();
+        printWriter.close();
+        String filename = timestamp + ".stacktrace";
+
+        if (localPath != null) {
+            writeToFile(stacktrace, filename);
+        }
+        if (url != null) {
+            sendToServer(stacktrace, filename);
+        }
+
+        defaultUEH.uncaughtException(t, e);
+    }
+
+    private void writeToFile(String stacktrace, String filename) {
+        try {
+            BufferedWriter bos = new BufferedWriter(new FileWriter(
+                    localPath + "/" + filename));
+            bos.write(stacktrace);
+            bos.flush();
+            bos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendToServer(String stacktrace, String filename) {
+        DefaultHttpClient httpClient = new DefaultHttpClient();
+        HttpPost httpPost = new HttpPost(url);
+        List&lt;NameValuePair&gt; nvps = new ArrayList&lt;NameValuePair&gt;();
+        nvps.add(new BasicNameValuePair("filename", filename));
+        nvps.add(new BasicNameValuePair("stacktrace", stacktrace));
+        try {
+            httpPost.setEntity(
+                    new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+            httpClient.execute(httpPost);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+
+<p>upload.php</p>
+
+<pre><code>&lt;?php
+    $filename = isset($_POST['filename']) ? $_POST['filename'] : "";
+    $message = isset($_POST['stacktrace']) ? $_POST['stacktrace'] : "";
+    if (!ereg('^[-a-zA-Z0-9_. ]+$', $filename) || $message == ""){
+        die("This script is used to log debug data. Please send the "
+                . "logging message and a filename as POST variables.");
+    }
+    file_put_contents($filename, $message . "\n", FILE_APPEND);
+?&gt;
+</code></pre>
+
+<p>index.php</p>
+
+<pre><code>&lt;?php
+    $myDirectory = opendir(".");
+    while($entryName = readdir($myDirectory)) {
+        $dirArray[] = $entryName;
+    }
+    closedir($myDirectory);
+    $indexCount = count($dirArray);
+    sort($dirArray);
+    print("&lt;TABLE border=1 cellpadding=5 cellspacing=0 \n");
+    print("&lt;TR&gt;&lt;TH&gt;Filename&lt;/TH&gt;&lt;TH&gt;Filetype&lt;/th&gt;&lt;th&gt;Filesize&lt;/TH&gt;&lt;/TR&gt;\n");
+    for($index=0; $index &lt; $indexCount; $index++) {
+        if ((substr("$dirArray[$index]", 0, 1) != ".") 
+                &amp;&amp; (strrpos("$dirArray[$index]", ".stacktrace") != false)){ 
+            print("&lt;TR&gt;&lt;TD&gt;");
+            print("&lt;a href=\"$dirArray[$index]\"&gt;$dirArray[$index]&lt;/a&gt;");
+            print("&lt;/TD&gt;&lt;TD&gt;");
+            print(filetype($dirArray[$index]));
+            print("&lt;/TD&gt;&lt;TD&gt;");
+            print(filesize($dirArray[$index]));
+            print("&lt;/TD&gt;&lt;/TR&gt;\n");
+        }
+    }
+    print("&lt;/TABLE&gt;\n");
+?&gt;
+</code></pre>
+
+===UCLA===
+PostId: 763982
+Score: 13
+Accepted: 0
+ViewCount: 9153
+Tags: <android><wireless><gprs>
+<h2>2G/3G</h2>
+
+<p>To determine your network type use:</p>
+
+<pre><code>TelephonyManager.getNetworkType();
+</code></pre>
+
+<p>here's some example code:</p>
+
+<pre><code>bool is3G = (manager.getNetworkType() == TelephonyManager.NETWORK_TYPE_UMTS);
+</code></pre>
+
+<p>Docs for the class can be found at: <a href="http://developer.android.com/reference/android/telephony/TelephonyManager.html">TelephonyManager</a></p>
+
+<p><br/></p>
+
+<h2>On/Off</h2>
+
+<p>To check if your telephone radio is on or off use:</p>
+
+<pre><code>ServiceState.getState();
+</code></pre>
+
+<p>To set it use:</p>
+
+<pre><code>ServiceState.setState(STATE_POWER_OFF);
+</code></pre>
+
+<p>It's unclear whether the setState method exists on all devices and functions in all states. There is no documentation for this method. Documentation for the class can be found at: <a href="http://developer.android.com/reference/android/telephony/ServiceState.html">ServiceState</a></p>
+
+<p>This issue might also be relevant: <a href="http://code.google.com/p/android/issues/detail?id=1065">http://code.google.com/p/android/issues/detail?id=1065</a></p>
+
+===UCLA===
+PostId: 769020
+Score: 12
+Accepted: 0
+ViewCount: 111243
+Tags: <android><android-activity><bundle>
+<p>You can use the Bundle from the Intent:</p>
+
+<pre><code>Bundle extras = myIntent.getExtras();
+extras.put*(info);
+</code></pre>
+
+<p>Or an entire bundle:</p>
+
+<pre><code>myIntent.putExtras(myBundle);
+</code></pre>
+
+<p>Is this what you're looking for?</p>
+
+===UCLA===
+PostId: 769303
+Score: 1
+Accepted: 0
+ViewCount: 13229
+Tags: <java><android><keyboard><locking><device-admin>
+<p>Looks like the screen lock function is performed using the method:</p>
+
+<pre><code>public void goToSleep(long time)
+</code></pre>
+
+<p>method in <code>PowerManager.java</code>. It's possible to get a reference to it in this fashion:</p>
+
+<pre><code>PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+</code></pre>
+
+<p>However this requires the permission</p>
+
+<pre><code>android.permission.DEVICE_POWER
+</code></pre>
+
+<p>which is a level 2 permission available to the system only.</p>
+
+<p>So looks like this isn't doable. This is for version 1.1 only, I don't know for 1.5.</p>
+
+===UCLA===
+PostId: 779588
+Score: 20
+Accepted: 1
+ViewCount: 52600
+Tags: <android><tabs><selector><drawable>
+<p>The XML you've included here is a way of defining a drawable that lets you embed a case statement. It presents a different drawable depending on the state of the View it's being assigned to. As a drawable, you should save it as an xml file within the <code>res/drawable</code> folder of your project (for example <code>tabselector.xml</code>).</p>
+
+<p>To use it for the Tabhost, you need to construct the TabActivity as you normally would (as shown in this <a href="http://developer.android.com/guide/tutorials/views/hello-tabwidget.html">tutorial example</a>).</p>
+
+<p>Then when you add each tab to the host, you specify the <code>tabselector</code> drawable as the indicator as shown for "TAB 1" below.</p>
+
+<pre><code>Drawable mySelector = getResources().getDrawable(R.drawable.tabselector);
+
+mTabHost.addTab(mTabHost.newTabSpec("tab_test1").setIndicator("TAB 1", mySelector).setContent(R.id.textview1));
+mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator("TAB 2").setContent(R.id.textview2));
+</code></pre>
+
+<p>Note: You <em>cannot</em> change the color of the tab backgrounds behind the icons at this point.</p>
+
+===UCLA===
+PostId: 784463
+Score: 4
+Accepted: 1
+ViewCount: 5619
+Tags: <android><animation>
+<p>Well, I'm glad I'm not the only one who had a difficult time finding the very subtle bug in the above.  The bug is:</p>
+
+<pre><code>startAnimation(anim);
+</code></pre>
+
+<p>which isn't too obvious until you expand it into:</p>
+
+<pre><code>this.startAnimation(anim);
+</code></pre>
+
+<p>at which point it's clear why the outer view (ie. 'this') is animating as well as the text.</p>
+
+===UCLA===
+PostId: 784691
+Score: 34
+Accepted: 0
+ViewCount: 40882
+Tags: <android>
+<p>Found the correct way to open InputStream from content URI:</p>
+
+<pre><code>InputStream fileInputStream=yourContext.getContentResolver().openInputStream(uri);
+</code></pre>
+
+<p>That's all!</p>
+
+===UCLA===
+PostId: 819320
+Score: 27
+Accepted: 0
+ViewCount: 125000
+Tags: <java><android><encryption><preferences><credentials>
+<p>About the simplest way to store a single preference in an Android Activity is to do something like this:</p>
+
+<pre><code>Editor e = this.getPreferences(Context.MODE_PRIVATE).edit();
+e.putString("password", mPassword);
+e.commit();
+</code></pre>
+
+<p>If you're worried about the security of these then you could always encrypt the password before storing it.</p>
+
+===UCLA===
+PostId: 819427
+Score: 266
+Accepted: 1
+ViewCount: 111243
+Tags: <android><android-activity><bundle>
+<p>You have a few options:</p>
+
+<p>1) Use the <a href="http://developer.android.com/reference/android/os/Bundle.html">Bundle</a> from the <a href="http://developer.android.com/reference/android/content/Intent.html">Intent</a>:</p>
+
+<pre><code>Intent mIntent = new Intent(this, Example.class);
+Bundle extras = mIntent.getExtras();
+extras.putString(key, value);  
+</code></pre>
+
+<p>2) Create a new Bundle</p>
+
+<pre><code>Intent mIntent = new Intent(this, Example.class);
+Bundle mBundle = new Bundle();
+mBundle.putString(key, value);
+mIntent.putExtras(mBundle);
+</code></pre>
+
+<p>3) Use the <a href="http://developer.android.com/reference/android/content/Intent.html#putExtra%28java.lang.String,%20java.lang.String%5b%5d%29">putExtra()</a> shortcut method of the Intent</p>
+
+<pre><code>Intent mIntent = new Intent(this, Example.class);
+mIntent.putExtra(key, value);
+</code></pre>
+
+<p><br/>
+Then, in the launched Activity, you would read them via:</p>
+
+<pre><code>String value = getIntent().getExtras().getString(key)
+</code></pre>
+
+<p><strong><em>NOTE:</strong> Bundles have "get" and "put" methods for all the primitive types, Parcelables, and Serializables. I just used Strings for demonstrational purposes.</em></p>
+
+===UCLA===
+PostId: 819605
+Score: 173
+Accepted: 0
+ViewCount: 173487
+Tags: <android><sqlite><content-values>
+<p>You cannot use the datetime function using the Java wrapper "ContentValues". Either you can use :</p>
+
+<ul>
+<li><p>SQLiteDatabase.execSQL so you can enter a raw SQL query.  </p>
+
+<pre><code>mDb.execSQL("INSERT INTO "+DATABASE_TABLE+" VALUES (null, datetime()) ");
+</code></pre></li>
+<li><p>Or the java date time capabilities :</p>
+
+<pre><code>// set the format to sql date time
+SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+Date date = new Date();
+ContentValues initialValues = new ContentValues(); 
+initialValues.put("date_created", dateFormat.format(date));
+long rowId = mDb.insert(DATABASE_TABLE, null, initialValues);
+</code></pre></li>
+</ul>
+
+===UCLA===
+PostId: 823643
+Score: 12
+Accepted: 1
+ViewCount: 23471
+Tags: <android><animated-gif>
+<p>The general sketch of the solution is to use employ custom <code>View</code> which draws asks a <code>Movie</code> to draw itself to the <code>Canvas</code> periodically. </p>
+
+<p>The first step is building the <code>Movie</code> instance.  There is factory called <code>decodeStream</code> that can make a movie given an <code>InputStream</code> but it isn't enough to use the stream from a <code>UrlConnection</code>.  If you try this you will get an <code>IOException</code> when the movie loader tries to call <code>reset</code> on the stream.  The hack, unfortunate as it is, is to use a separated <code>BufferedInputStream</code> with a manually-set <code>mark</code> to tell it to save enough data that <code>reset</code> won't fail.  Luckily, the <code>URLConnection</code> can tell us how much data to expect.  I say this hack is unfortunate because it effectively requires the entire image to be buffered in memory (which is no problem for desktop apps, but it is a serious issue on a memory-constrained mobile device).</p>
+
+<p>Here is a snip of the <code>Movie</code> setup code:</p>
+
+<pre><code>URL url = new URL(gifSource);
+URLConnection conn = url.openConnection();
+InputStream is = conn.getInputStream();
+BufferedInputStream bis = new BufferedInputStream(is);
+bis.mark(conn.getContentLength());
+Movie movie = Movie.decodeStream(bis);
+bis.close();
+</code></pre>
+
+<p>Next, you need to create a view that will display this <code>Movie</code>.  A subclass of <code>View</code> with a custom <code>onDraw</code> will do the trick (assuming it has access to the <code>Movie</code> you created with the previous code).</p>
+
+<pre><code>@Override protected void onDraw(Canvas canvas) {
+    if(movie != null) {
+        long now = android.os.SystemClock.uptimeMillis();
+        int dur = Math.max(movie.duration(), 1); // is it really animated?
+        int pos = (int)(now % dur);
+        movie.setTime(pos);
+        movie.draw(canvas, x, y);
+    }
+}
+</code></pre>
+
+<p>The view won't trigger itself to be redrawn without help, and blindly calling <code>invalidate()</code> at the end of <code>onDraw</code> is just an energy waste.  In another thread (probably the one you used to download the image data), you can post messages to the main thread, asking for the view to be invalidated at a steady (but not insane) pace.</p>
+
+<pre><code>Handler handler = new Handler();
+new Thread() {
+    @Override public void run() {
+        // ... setup the movie (using the code from above)
+        // ... create and display the custom view, passing the movie
+
+        while(!Thread.currentThread().isInterrupted()) {
+            handler.post(new Runnable() {
+                public void run(){
+                    view.invalidate();
+                }
+            });
+            try {
+                Thread.sleep(50); // yields 20 fps
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+}.start();
+</code></pre>
+
+<p>A really nice solution would have all sorts of sweet progress bars and error checking, but the core is here.</p>
+
+===UCLA===
+PostId: 823966
+Score: 761
+Accepted: 0
+ViewCount: 469733
+Tags: <android><image><bitmap><out-of-memory><android-bitmap>
+<p>To fix the OutOfMemory error, you should do something like this:</p>
+
+<pre><code>BitmapFactory.Options options = new BitmapFactory.Options();
+options.inSampleSize = 8;
+Bitmap preview_bitmap = BitmapFactory.decodeStream(is, null, options);
+</code></pre>
+
+<p>This <code>inSampleSize</code> option reduces memory consumption.</p>
+
+<p>Here's a complete method. First it reads image size without decoding the content itself. Then it finds the best <code>inSampleSize</code> value, it should be a power of 2, and finally the image is decoded.</p>
+
+<pre><code>// Decodes image and scales it to reduce memory consumption
+private Bitmap decodeFile(File f) {
+    try {
+        // Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(new FileInputStream(f), null, o);
+
+        // The new size we want to scale to
+        final int REQUIRED_SIZE=70;
+
+        // Find the correct scale value. It should be the power of 2.
+        int scale = 1;
+        while(o.outWidth / scale / 2 &gt;= REQUIRED_SIZE &amp;&amp; 
+              o.outHeight / scale / 2 &gt;= REQUIRED_SIZE) {
+            scale *= 2;
+        }
+
+        // Decode with inSampleSize
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = scale;
+        return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+    } catch (FileNotFoundException e) {}
+    return null;
+}
+</code></pre>
+
+===UCLA===
+PostId: 823997
+Score: 2
+Accepted: 0
+ViewCount: 9153
+Tags: <android><wireless><gprs>
+<p>You can also use ConnectivityManager. Something like that:</p>
+
+<pre><code>ConnectivityManager connectivityManager =(ConnectivityManager)mContext.getSystemService(Context.CONNECTIVITY_SERVICE); 
+NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
+</code></pre>
+
+===UCLA===
+PostId: 851165
+Score: 23
+Accepted: 0
+ViewCount: 102354
+Tags: <android><sms>
+<p>So, I had a play, and it <em>is</em> possible to delete a received SMS.
+Unfortunately it's not all plain sailing :(</p>
+
+<p>I have a receiver that picks up on incoming SMS messages.  Now the way the Android SMS incoming routing works is that the piece of code responsible for decoding the messages sends a Broadcast (it uses the <code>sendBroadcast()</code> method - which unfortunately is NOT the version that lets you simply call <code>abortBroadcast()</code>) whenever a message arrives.</p>
+
+<p>My receiver may or may not be called before the Systems SMS receiver, and in any case the received broadcast has no property that could reflect the <code>_id</code> column in the SMS table.</p>
+
+<p>However, not being one to be stopped that easily I post myself (via a Handler) a delayed message with the SmsMessage as the attached object.  (I suppose you could post yourself a Runnable too...)</p>
+
+<pre><code>handler.sendMessageDelayed(handler.obtainMessage(MSG_DELETE_SMS, msg), 2500);
+</code></pre>
+
+<p>The delay is there to ensure that by the time the message arrives all of the Broadcast receivers will have finished their stuff and the message will be safely ensconced in the SMS table.</p>
+
+<p>When the message (or Runnable) is received here is what I do:</p>
+
+<pre><code>case MSG_DELETE_SMS:
+    Uri deleteUri = Uri.parse("content://sms");
+    SmsMessage msg = (SmsMessage)message.obj;
+
+    getContentResolver().delete(deleteUri, "address=? and date=?", new String[] {msg.getOriginatingAddress(), String.valueOf(msg.getTimestampMillis())});
+</code></pre>
+
+<p>I use the originating address and timestamp field to ensure a very high probability of deleting ONLY the message I am interested in.  If I wanted to be even more paranoid I could include the <code>msg.getMessageBody()</code> content as part of the query.</p>
+
+<p>Yes, the message IS deleted (hooray!).
+Unfortunately the notification bar is not updated :(</p>
+
+<p>When you open up the notification area you'll see the message sitting there for you... but when you tap on it to open it up - it's gone!</p>
+
+<p>To me, this isn't quite good enough - I want all trace of the message to disappear - I don't want the user to think there is a TXT when there isn't (that would only cause bug reports).</p>
+
+<p>Internally in the OS the phone calls <code>MessagingNotification.updateNewMessageIndicator(Context)</code>, but I that class has been hidden from the API, and I did not want to replicate all of that code just for the sake of making the indicator accurate.</p>
+
+===UCLA===
+PostId: 851668
+Score: 54
+Accepted: 0
+ViewCount: 180222
+Tags: <android><sms><inbox>
+<p>It is a trivial process. You can see a good example in the source code <a href="https://github.com/everythingandroid/android-smspopup">SMSPopup</a></p>
+
+<p>Examine the following methods:</p>
+
+<pre><code>SmsMmsMessage getSmsDetails(Context context, long ignoreThreadId, boolean unreadOnly)
+long findMessageId(Context context, long threadId, long _timestamp, int messageType
+void setMessageRead(Context context, long messageId, int messageType)
+void deleteMessage(Context context, long messageId, long threadId, int messageType)
+</code></pre>
+
+<p>this is the method for reading:</p>
+
+<pre><code>SmsMmsMessage getSmsDetails(Context context,
+                            long ignoreThreadId, boolean unreadOnly)
+{
+   String SMS_READ_COLUMN = "read";
+   String WHERE_CONDITION = unreadOnly ? SMS_READ_COLUMN + " = 0" : null;
+   String SORT_ORDER = "date DESC";
+   int count = 0;
+   // Log.v(WHERE_CONDITION);
+   if (ignoreThreadId &gt; 0) {
+      // Log.v("Ignoring sms threadId = " + ignoreThreadId);
+      WHERE_CONDITION += " AND thread_id != " + ignoreThreadId;
+   }
+   Cursor cursor = context.getContentResolver().query(
+                      SMS_INBOX_CONTENT_URI,
+                      new String[] { "_id", "thread_id", "address", "person", "date", "body" },
+                      WHERE_CONDITION,
+                      null,
+                      SORT_ORDER);
+   if (cursor != null) {
+      try {
+         count = cursor.getCount();
+         if (count &gt; 0) {
+            cursor.moveToFirst();
+            // String[] columns = cursor.getColumnNames();
+            // for (int i=0; i&lt;columns.length; i++) {
+            // Log.v("columns " + i + ": " + columns[i] + ": " + cursor.getString(i));
+            // }                                         
+            long messageId = cursor.getLong(0);
+            long threadId = cursor.getLong(1);
+            String address = cursor.getString(2);
+            long contactId = cursor.getLong(3);
+            String contactId_string = String.valueOf(contactId);
+            long timestamp = cursor.getLong(4);
+
+            String body = cursor.getString(5);                             
+            if (!unreadOnly) {
+                count = 0;
+            }
+
+            SmsMmsMessage smsMessage = new SmsMmsMessage(context, address,
+                          contactId_string, body, timestamp,
+                          threadId, count, messageId, SmsMmsMessage.MESSAGE_TYPE_SMS);
+            return smsMessage;
+         }
+      } finally {
+         cursor.close();
+      }
+   }               
+   return null;
+}
+</code></pre>
+
+===UCLA===
+PostId: 857758
+Score: 3
+Accepted: 0
+ViewCount: 11863
+Tags: <android><android-calendar>
+<p>You can use the calendar content provider (<code>com.android.providers.calendar.CalendarProvider</code>). Example:</p>
+
+<pre><code>
+ContentResolver contentResolver = context.getContentResolver();
+Cursor cursor = contentResolver.query(Uri.parse("content://calendar/events"), null, null, null, null);
+
+while(cursor.moveToNext()) {
+    String eventTitle = cursor.getString(cursor.getColumnIndex("title"));
+    Date eventStart = new Date(cursor.getLong(cursor.getColumnIndex("dtstart")));
+    // etc.
+}
+
+</code></pre>
+
+<p><strong>edit</strong>: you might want to put this in a wrapper (see <a href="http://stackoverflow.com/questions/846942/is-there-a-way-to-access-the-calendars-entries-without-using-gdata-java-client/885659#885659">Isaac's post</a>) as it's currently a private API.</p>
+
+===UCLA===
+PostId: 860610
+Score: 15
+Accepted: 0
+ViewCount: 218665
+Tags: <android><crash><stack-trace>
+<p>Ok, well I looked at the provided samples from rrainn and Soonil, and I found a solution
+that does not mess up error handling.</p>
+
+<p>I modified the CustomExceptionHandler so it stores the original UncaughtExceptionHandler from the Thread we associate the new one. At the end of the new "uncaughtException"-
+Method I just call the old function using the stored UncaughtExceptionHandler.</p>
+
+<p>In the DefaultExceptionHandler class you need sth. like this:</p>
+
+<pre><code>public class DefaultExceptionHandler implements UncaughtExceptionHandler{
+  private UncaughtExceptionHandler mDefaultExceptionHandler;
+
+  //constructor
+  public DefaultExceptionHandler(UncaughtExceptionHandler pDefaultExceptionHandler)
+  {
+       mDefaultExceptionHandler= pDefaultExceptionHandler;
+  }
+  public void uncaughtException(Thread t, Throwable e) {       
+        //do some action like writing to file or upload somewhere         
+
+        //call original handler  
+        mStandardEH.uncaughtException(t, e);        
+
+        // cleanup, don't know if really required
+        t.getThreadGroup().destroy();
+  }
+}
+</code></pre>
+
+<p>With that modification on the code at <a href="http://code.google.com/p/android-remote-stacktrace">http://code.google.com/p/android-remote-stacktrace</a>
+you have a good working base for logging in the field to your webserver or to
+sd-card.</p>
+
+===UCLA===
+PostId: 866184
+Score: 30
+Accepted: 1
+ViewCount: 42876
+Tags: <android><android-custom-view>
+<p>The problem is that the only <a href="http://developer.android.com/reference/android/view/Window.html"><code>Window</code></a> implementation (<a href="http://android.git.kernel.org/?p=platform/frameworks/policies/base.git;a=blob%5Fplain;f=phone/com/android/internal/policy/impl/PhoneWindow.java;hb=HEAD"><code>PhoneWindow</code></a>) uses a <a href="http://developer.android.com/reference/android/view/LayoutInflater.html"><code>LayoutInflater</code></a> in its <code>setFeatureInt</code> method and instantiates the new layout with <a href="http://developer.android.com/reference/android/view/LayoutInflater.html"><code>inflate</code></a> and <code>attachToRoot=true</code>. Consequently, when you call <code>setFeatureInt</code>, the new layouts are not <em>replaced</em> but <em>attached</em> to the internal title container and thus drawn on top of each other.</p>
+
+<p>You can workaround this by using the following helper method instead of <code>setFeatureInt</code>. The helper simply removes all views from the internal title container before the new custom title feature is set:</p>
+
+<pre><code>
+private void setCustomTitleFeatureInt(int value) {
+    try {
+     // retrieve value for com.android.internal.R.id.title_container(=0x1020149)
+     int titleContainerId = (Integer) Class.forName(
+      "com.android.internal.R$id").getField("title_container").get(null);
+
+     // remove all views from titleContainer
+     ((ViewGroup) getWindow().findViewById(titleContainerId)).removeAllViews();
+
+     // add new custom title view 
+     getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, value);
+
+    } catch(Exception ex) {
+     // whatever you want to do here..
+    }
+}
+</code></pre>
+
+<p>I'm not sure whether the current <code>setFeatureInt</code> behaviour is intended, but it is certainly not documented one way or the other which is why I'll take this to the android devs ;)</p>
+
+<p><strong>EDIT</strong></p>
+
+<p>As pointed out in the comments, the aforementioned workaround is not ideal. Instead of relying on the <code>com.android.internal.R.id.title_container</code> constant you could simply <em>hide</em> the old custom title whenever you set a new one.</p>
+
+<p>Let's assume you have two custom title layouts:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;RelativeLayout android:id="@+id/custom_title_1" ...
+</code></pre>
+
+<p>and</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;RelativeLayout android:id="@+id/custom_title_2" ...
+</code></pre>
+
+<p>and you want to replace <code>custom_title_1</code> with <code>custom_title_2</code>, you could hide former and use <code>setFeatureInt</code> to add the latter:</p>
+
+<pre><code>findViewById(R.id.custom_title_1).setVisibility(View.GONE);
+getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title_2);
+</code></pre>
+
+===UCLA===
+PostId: 867828
+Score: 226
+Accepted: 1
+ViewCount: 179451
+Tags: <android><contacts>
+<p>I'm not 100% sure what your sample code is supposed to do, but the following snippet should help you 'call the contacts list function, pick a contact, then return to [your] app with the contact's name'.</p>
+
+<p>There are three steps to this process.</p>
+
+<h1>1. Permissions</h1>
+
+<p>Add a permission to read contacts data to your application manifest.</p>
+
+<pre><code>&lt;uses-permission android:name="android.permission.READ_CONTACTS"/&gt;
+</code></pre>
+
+<h1>2. Calling the Contact Picker</h1>
+
+<p>Within your Activity, create an Intent that asks the system to find an Activity that can perform a PICK action from the items in the Contacts URI.</p>
+
+<pre><code>Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+</code></pre>
+
+<p>Call <code>startActivityForResult</code>, passing in this Intent (and a request code integer, <code>PICK_CONTACT</code> in this example). This will cause Android to launch an Activity that's registered to support <code>ACTION_PICK</code> on the <code>People.CONTENT_URI</code>, then return to this Activity when the selection is made (or canceled).</p>
+
+<pre><code>startActivityForResult(intent, PICK_CONTACT);
+</code></pre>
+
+<h1>3. Listening for the Result</h1>
+
+<p>Also in your Activity, override the <code>onActivityResult</code> method to listen for the return from the 'select a contact' Activity you launched in step 2. You should check that the returned request code matches the value you're expecting, and that the result code is <code>RESULT_OK</code>.</p>
+
+<p>You can get the URI of the selected contact by calling <code>getData()</code> on the <em>data</em> Intent parameter. To get the name of the selected contact you need to use that URI to create a new query and extract the name from the returned cursor.</p>
+
+<pre><code>@Override
+public void onActivityResult(int reqCode, int resultCode, Intent data) {
+  super.onActivityResult(reqCode, resultCode, data);
+
+  switch (reqCode) {
+    case (PICK_CONTACT) :
+      if (resultCode == Activity.RESULT_OK) {
+        Uri contactData = data.getData();
+        Cursor c =  getContentResolver().query(contactData, null, null, null, null);
+        if (c.moveToFirst()) {
+          String name = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+          // TODO Whatever you want to do with the selected contact name.
+        }
+      }
+      break;
+  }
+}
+</code></pre>
+
+<p><sup>Full source code: <a href="http://tutorials-android.blogspot.com/2011/11/how-to-call-android-contacts-list.html" rel="nofollow">tutorials-android.blogspot.com (how to call android contacts list)</a>.</sup></p>
+
+===UCLA===
+PostId: 870933
+Score: 9
+Accepted: 1
+ViewCount: 6107
+Tags: <android>
+<p>What you want to do is definitely possible, however you will need to manually fetch the image and set it on the ImageButton.</p>
+
+<p>Here is a little method you can use to fetch an image:</p>
+
+<pre><code>private Bitmap fetchImage( String urlstr )
+{
+    try
+    {
+        URL url;
+        url = new URL( urlstr );
+
+        HttpURLConnection c = ( HttpURLConnection ) url.openConnection();
+        c.setDoInput( true );
+        c.connect();
+        InputStream is = c.getInputStream();
+        Bitmap img;
+        img = BitmapFactory.decodeStream( is );
+        return img;
+    }
+    catch ( MalformedURLException e )
+    {
+        Log.d( "RemoteImageHandler", "fetchImage passed invalid URL: " + urlstr );
+    }
+    catch ( IOException e )
+    {
+        Log.d( "RemoteImageHandler", "fetchImage IO exception: " + e );
+    }
+    return null;
+}
+</code></pre>
+
+<p>Of course you will want to wrap this method in a thread (Using <a href="http://developer.android.com/reference/android/os/AsyncTask.html" title="AsyncTask">AsyncTask</a> with SDK 1.5 or <a href="http://code.google.com/p/apps-for-android/source/browse/trunk/Photostream/src/com/google/android/photostream/UserTask.java" title="UserTask">UserTask</a> in SDK pre 1.5), then simply call:</p>
+
+<pre><code>myImageButton.setImageBitmap( bitmap );
+</code></pre>
+
+<p>I think this has answered your question, if not please elaborate further.</p>
+
+===UCLA===
+PostId: 890945
+Score: 65
+Accepted: 1
+ViewCount: 38760
+Tags: <java><android><mobile>
+<p>The <a href="http://developer.android.com/reference/android/telephony/TelephonyManager.html">TelephonyManager</a> has a method to return the MCC+MNC as a String (<a href="http://developer.android.com/reference/android/telephony/TelephonyManager.html#getNetworkOperator()">getNetworkOperator()</a>) which will do you what you want. You can get access it via:</p>
+
+<pre><code>protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    TelephonyManager tel = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+    String networkOperator = tel.getNetworkOperator();
+
+    if (TextUtils.isEmpty(networkOperator) == false) {
+        int mcc = Integer.parseInt(networkOperator.substring(0, 3));
+        int mnc = Integer.parseInt(networkOperator.substring(3));
+    }
+}
+</code></pre>
+
+===UCLA===
+PostId: 895602
+Score: 4
+Accepted: 1
+ViewCount: 11172
+Tags: <android><checkbox><android-listview><android-viewbinder>
+<p>Looks like <code>SimpleCursorAdapter</code> is too primitive for what I wanted to achieve.
+I've switched to implementing <code>CursorAdapter</code> and returning a new view using the <code>LayoutInflater</code> in my implementation of the <code>newView</code> method.</p>
+
+<pre><code>  public View newView(Context context, Cursor cursor, ViewGroup parent) {
+    return LayoutInflater.from(context).inflate(R.layout.alarm_row, parent, false);
+  }
+</code></pre>
+
+<p>In bindView I then set a custom <code>OnClickListener</code> to my main <code>LinearLayout</code> and then another <code>OnCheckedChangeListener</code> to the <code>CheckBox</code>.</p>
+
+<p>For all this to look right I had to set the <code>LinearLayout</code>'s background to android's menuitem drawable:</p>
+
+<pre><code>android:background="@android:drawable/menuitem_background"
+</code></pre>
+
+===UCLA===
+PostId: 896906
+Score: 4
+Accepted: 0
+ViewCount: 50636
+Tags: <java><android>
+<p>First you need to set the content-type as a 'x-www-form-urlencoded'. Then whatever content you would like to encode, encode it using "UTF-8". </p>
+
+<p>For example:</p>
+
+<p><strong>For setting content to 'x-www-form-urlencoded':</strong><br></p>
+
+<pre><code>URL url = new URL("http://www.xyz.com/SomeContext/SomeAction"); &lt;br&gt;
+URLConnection urlConnection = url.openConnection();&lt;br&gt;
+....&lt;br&gt;
+....&lt;br&gt;
+urlConnection.setRequestProperty("Content-type","application/x-www-form-urlencoded");
+</code></pre>
+
+<p><br>Or if you are using some JSP then you can write the following on top of it.<br></p>
+
+<pre><code>&lt;%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %&gt;&lt;br&gt;
+&lt; META http-equiv="Content-Type" content="text/html; charset=UTF-8"&gt;
+
+
+&lt; FORM action="someaction.jsp" enctype="application/x-www-form-urlencoded" name="InputForm" method="POST"&gt;
+</code></pre>
+
+<p><strong>And to use URLEncoder:</strong><br></p>
+
+<pre><code>String encodedString = URLEncoder.encode("hello","UTF-8");
+</code></pre>
+
+===UCLA===
+PostId: 897268
+Score: 3
+Accepted: 0
+ViewCount: 3661
+Tags: <java><android>
+<p>Alignment of text within an EditText widget can be controlled via gravity:</p>
+
+<pre><code>editText.setGravity(Gravity.TOP);</code></pre>
+
+<p>To attach markup objects to the EditText's content you can use the <a href="http://developer.android.com/reference/android/text/Editable.html" rel="nofollow">Editable</a> interface:</p>
+
+<pre><code>EditText editText = (EditText) findViewById(R.id.editview);
+SpannableStringBuilder builder = new SpannableStringBuilder();
+builder.append("one red word");
+builder.setSpan(new ForegroundColorSpan(Color.RED), 4, 7, Spanned.SPAN_COMPOSING);
+editText.setText(builder, BufferType.EDITABLE);
+</code></pre>
+
+===UCLA===
+PostId: 901474
+Score: 1
+Accepted: 0
+ViewCount: 5866
+Tags: <android>
+<p>For working with sqlite database you need to create class extended from SQLiteOpenHelper:</p>
+
+<pre><code>private class DBHelper extends SQLiteOpenHelper {   
+
+    public DBHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_TABLES);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL(UPGRADE_TABLES);
+    }
+
+}   
+</code></pre>
+
+<p>Then you can get access to db using DbHelper object:</p>
+
+<pre><code>DBHelper dbHelper = new DBHelper(Activity.this);
+SQLiteDatabase db = dbHelper.getReadableDatabase();
+</code></pre>
+
+===UCLA===
+PostId: 901997
+Score: 0
+Accepted: 0
+ViewCount: 31020
+Tags: <android>
+<p>Please be aware that every time you change the orientation, a new instance of your <code>Activity</code> (and consequently of your <code>Dialog</code> via <code>onCreateDialog</code>) is created. You can verify this by adding a log statement in either constructor.</p>
+
+<p>Although difficult to say without having a glance at your code, I'm guessing you're calling <code>dismissDialog</code> on an older instance of your <code>Activity</code>.</p>
+
+<p>Consider the following <code>Activity</code> that simply shows an empty <code>Dialog</code> when a button is clicked and starts a <code>TimerTask</code> to dismiss it after 10 seconds:</p>
+
+<pre><code>public class Test extends Activity {
+
+    private Dialog dialog;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+     super.onCreate(savedInstanceState);  
+     setContentView(R.layout.test);
+     Button btn = (Button) findViewById(R.id.testButton);
+     btn.setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+       new Timer().schedule(new TimerTask() {
+        @Override public void run() { dialog.dismiss(); }
+       }, 10000);
+       Test.this.showDialog(1);
+      }
+     });
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+     if(id == 1) {
+      if(dialog == null) { dialog = new Dialog(this); }
+      return dialog;
+     }
+     return super.onCreateDialog(id);
+    }
+}
+</code></pre>
+
+<p>This code has a problem similar to the one you're describing: If - during the 10 seconds - the orientation is changed, the <code>Dialog</code> is never dismissed. <em>Why?</em> Because at the time the <code>TimerTask</code> is <code>run</code>, a whole different set of <code>Test</code> and <code>Dialog</code> instances has been created (during orientation change) and the <code>TimerTask</code>'s <code>dialog</code> instance variable references a <code>Test</code> instance that is different from the one that is currently active on the screen.</p>
+
+<p>Obviously there are several ways to deal with this issue (mostly depending on your application), one quick (dirty?) way to fix the above code would be to simply make the <code>dialog</code> field <code>static</code>:</p>
+
+<pre><code>private static Dialog dialog;</code></pre>
+
+===UCLA===
+PostId: 902666
+Score: 36
+Accepted: 1
+ViewCount: 24296
+Tags: <android><android-sdcard>
+<p>If you're trying to access images on the device, the best method is to use the <a href="http://developer.android.com/reference/android/provider/MediaStore.Images.Media.html">MediaStore content provider</a>. Accessing it as a <a href="http://developer.android.com/guide/topics/providers/content-providers.html">content provider</a> will allow you to query the images that are present, and map <code>content://</code> URLs to filepaths on the device where appropriate.</p>
+
+<p>If you still need to access the SD card, the Camera application includes an <a href="http://android.git.kernel.org/?p=platform/packages/apps/Camera.git;a=blob;f=src/com/android/camera/ImageManager.java;h=073b8db811d1a010079c7a258a418aa90fae2326;hb=dafe31ead98304414f84f021bd0c155e62d833c2">ImageUtils</a> class that checks if the SD card is mounted as follows:</p>
+
+<pre><code>static public boolean hasStorage(boolean requireWriteAccess) {
+    //TODO: After fix the bug,  add "if (VERBOSE)" before logging errors.
+    String state = Environment.getExternalStorageState();
+    Log.v(TAG, "storage state is " + state);
+
+    if (Environment.MEDIA_MOUNTED.equals(state)) {
+        if (requireWriteAccess) {
+            boolean writable = checkFsWritable();
+            Log.v(TAG, "storage writable is " + writable);
+            return writable;
+        } else {
+            return true;
+        }
+    } else if (!requireWriteAccess &amp;&amp; Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+        return true;
+    }
+    return false;
+}
+</code></pre>
+
+===UCLA===
+PostId: 907535
+Score: 5
+Accepted: 0
+ViewCount: 30707
+Tags: <android>
+<p>A late answer, but maybe it helps anyway:</p>
+
+<p>If you look at the <a href="http://github.com/android/platform%5Fpackages%5Fproviders%5Fcontactsprovider/raw/d463e03b381c5e45cecc30074cea24d93d90e8a6/src/com/android/providers/contacts/ContactsProvider.java">source code of ContactsProvider</a> and search for "matcher.addURI" (<em>don't be surprised if it stops loading in the middle... it resumes loading after a minute or two</em>), then you see that it has a finite set of URI schemes that it can handle. It has a handler for "phones/#" but not for "phones", which is what you would need. </p>
+
+<p>This means, there is just no code to delete all phone numbers, you have to get the IDs of all numbers first, and then delete each one at a time. Of course this takes a lot more CPU and memory resources, but at least it works.</p>
+
+<p>The following code deletes a specific number. Please be aware that I did not test this code, but it is 90% identical to the code I use to delete all numbers of a given person, which needs similar treatment beacause Android can't delete "people/#/phones" but "people/#/phones/#"</p>
+
+<p><strong>EDIT:</strong> <em>I just realized that I misunderstood the question. I thought you would like to delete the phone number, which my code does. But now I see you want to delete the contanct.</em></p>
+
+<pre><code>private void deletePhoneNumber(Uri peopleUri, String numberToDelete) {
+
+ Uri.Builder builder = peopleUri.buildUpon();
+ builder.appendEncodedPath(People.Phones.CONTENT_DIRECTORY);
+ Uri phoneNumbersUri = builder.build();
+
+
+ String[] mPhoneNumberProjection = { People.Phones._ID, People.Phones.NUMBER };
+ Cursor cur = resolver.query(phoneNumbersUri, mPhoneNumberProjection,
+   null, null, null);
+
+ ArrayList&lt;String&gt; idsToDelete = new ArrayList&lt;String&gt;();
+
+ if (cur.moveToFirst()) {
+  final int colId = cur.getColumnIndex(People.Phones._ID);
+  final int colNumber = cur.getColumnIndex(People.Phones.NUMBER);
+
+  do {
+   String id = cur.getString(colId);
+   String number = cur.getString(colNumber);
+   if(number.equals(numberToDelete))
+    idsToDelete.add(id);
+  } while (cur.moveToNext());
+ }
+ cur.close();
+
+ for (String id : idsToDelete) {
+  builder.encodedPath(People.Phones.CONTENT_DIRECTORY + "/" + id);
+  phoneNumbersUri = builder.build();
+  resolver.delete(phoneNumbersUri, "1 = 1", null);
+ }
+}
+</code></pre>
+
+<p>The code is a bit verbose because it makes two assumptions:</p>
+
+<ul>
+<li>there could be multiple lines to delete (e.g. the number is stored twice)</li>
+<li>it might be unsafe to get a cursor, delete a row, and keep using the cursor</li>
+</ul>
+
+<p>Both assumptions are handled by first storing the <code>idsToDelete</code> in an <code>ArrayList</code> and then deleting.</p>
+
+<p>You might also consider to normalize the number you search for, and use the Column <code>People.Phones.NUMBER_KEY</code> instead, because it contains the numbers in normalized form. </p>
+
+===UCLA===
+PostId: 910386
+Score: 0
+Accepted: 0
+ViewCount: 10482
+Tags: <java><android><android-edittext>
+<p>You can implement a TextChangedListener where you make sure those parts of your text wont get <code>deleted/overwritten</code>.</p>
+
+<pre><code>class TextChangedListener implements TextWatcher {
+    public void afterTextChanged(Editable s) {
+                makeSureNothingIsDeleted();
+    }
+
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+    public void onTextChanged(CharSequence s, int start, int before, int count) {}
+}
+</code></pre>
+
+<hr>
+
+<pre><code>    TextChangedListener tcl = new TextChangedListener();
+    my_editable.addTextChangedListener(tcl);
+</code></pre>
+
+===UCLA===
+PostId: 911254
+Score: 15
+Accepted: 0
+ViewCount: 10482
+Tags: <java><android><android-edittext>
+<p>You could use</p>
+
+<pre><code>editText.setFocusable(false);</code></pre>
+
+<p>or</p>
+
+<pre><code>editText.setEnabled(false);</code></pre>
+
+<p>although disabling the <code>EditText</code> does currently not ignore input from the on-screen keyboard (I think that's a bug).</p>
+
+<p>Depending on the application it might be better to use an <a href="http://developer.android.com/reference/android/text/InputFilter.html"><code>InputFilter</code></a> that rejects all changes:</p>
+
+<pre><code>editText.setFilters(new InputFilter[] {
+    new InputFilter() {
+     public CharSequence filter(CharSequence src, int start,
+      int end, Spanned dst, int dstart, int dend) {
+      return src.length() &lt; 1 ? dst.subSequence(dstart, dend) : "";
+     }
+    }
+});</code></pre>
+
+<p>Also see <a href="http://stackoverflow.com/questions/660151/how-to-replicate-androideditablefalse-in-code">this</a> question.</p>
+
+===UCLA===
+PostId: 923451
+Score: 6
+Accepted: 1
+ViewCount: 5879
+Tags: <android><bitmap><fill>
+<p>I didn't provide enough info!</p>
+
+<p>My alpha value was out of range;</p>
+
+<pre><code>int a = 0xFF&lt;&lt;24
+</code></pre>
+
+<p>So when I called </p>
+
+<pre><code>c.drawARGB(a,r,g,b);
+</code></pre>
+
+<p>It failed quietly and didn't change the values.</p>
+
+===UCLA===
+PostId: 938657
+Score: 715
+Accepted: 1
+ViewCount: 366890
+Tags: <android><listener><gesture-recognition>
+<p>Thanks to <a href="http://www.codeshogun.com/blog/2009/04/16/how-to-implement-swipe-action-in-android/" rel="nofollow">Code Shogun</a>, whose code I adapted to my situation.</p>
+
+<p>Let your activity implement<code>OnClickListener</code> as usual:</p>
+
+<pre><code>public class SelectFilterActivity extends Activity implements OnClickListener {
+
+  private static final int SWIPE_MIN_DISTANCE = 120;
+  private static final int SWIPE_MAX_OFF_PATH = 250;
+  private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+  private GestureDetector gestureDetector;
+  View.OnTouchListener gestureListener;
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    /* ... */
+
+    // Gesture detection
+    gestureDetector = new GestureDetector(this, new MyGestureDetector());
+    gestureListener = new View.OnTouchListener() {
+      public boolean onTouch(View v, MotionEvent event) {
+        return gestureDetector.onTouchEvent(event);
+      }
+    };
+
+  }
+
+  class MyGestureDetector extends SimpleOnGestureListener {
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+      try {
+        if (Math.abs(e1.getY() - e2.getY()) &gt; SWIPE_MAX_OFF_PATH)
+          return false;
+        // right to left swipe
+        if(e1.getX() - e2.getX() &gt; SWIPE_MIN_DISTANCE &amp;&amp; Math.abs(velocityX) &gt; SWIPE_THRESHOLD_VELOCITY) {
+          Toast.makeText(SelectFilterActivity.this, "Left Swipe", Toast.LENGTH_SHORT).show();
+        } else if (e2.getX() - e1.getX() &gt; SWIPE_MIN_DISTANCE &amp;&amp; Math.abs(velocityX) &gt; SWIPE_THRESHOLD_VELOCITY) {
+          Toast.makeText(SelectFilterActivity.this, "Right Swipe", Toast.LENGTH_SHORT).show();
+        }
+      } catch (Exception e) {
+         // nothing
+      }
+      return false;
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+      return true;
+    }
+  }
+}
+</code></pre>
+
+<p>Attach your gesture listener to all the views you add to the main layout;</p>
+
+<pre><code>// Do this for each view added to the grid
+imageView.setOnClickListener(SelectFilterActivity.this); 
+imageView.setOnTouchListener(gestureListener);
+</code></pre>
+
+<p>Watch in awe as your overridden methods are hit, both the <code>onClick(View v)</code> of the activity and the <code>onFling</code> of the gesture listener.</p>
+
+<pre><code>public void onClick(View v) {
+  Filter f = (Filter) v.getTag();
+  FilterFullscreenActivity.show(this, input, f);
+}
+</code></pre>
+
+<p>The post 'fling' dance is optional but encouraged. </p>
+
+===UCLA===
+PostId: 945879
+Score: 35
+Accepted: 1
+ViewCount: 39293
+Tags: <java><android>
+<p>Yes, you should be able to use <code>openRawResource</code> to copy a binary across from your raw resource folder to the device.</p>
+
+<p>Based on the example code in the API demos (content/ReadAsset), you should be able to use a variation of the following code snippet to read the db file data.</p>
+
+<pre><code>InputStream ins = getResources().openRawResource(R.raw.my_db_file);
+ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+int size = 0;
+// Read the entire resource into a local byte buffer.
+byte[] buffer = new byte[1024];
+while((size=ins.read(buffer,0,1024))&gt;=0){
+  outputStream.write(buffer,0,size);
+}
+ins.close();
+buffer=outputStream.toByteArray();
+</code></pre>
+
+<p>A copy of your file should now exist in <code>buffer</code>, so you can use a <code>FileOutputStream</code> to save the buffer to a new file.</p>
+
+<pre><code>FileOutputStream fos = new FileOutputStream("mycopy.db");
+fos.write(buffer);
+fos.close();
+</code></pre>
+
+===UCLA===
+PostId: 947560
+Score: 261
+Accepted: 0
+ViewCount: 128738
+Tags: <android><android-intent>
+<p>There are a couple of ways to achieve what you want, depending on the circumstances. </p>
+
+<p>The most common scenario (which is what yours sounds like) is when a child Activity is used to get user input - such as choosing a contact from a list or entering data in a dialog box. In this case you should use <a href="http://developer.android.com/reference/android/app/Activity.html#startActivityForResult%28android.content.Intent,%20int%29"><code>startActivityForResult</code></a> to launch your child Activity.</p>
+
+<p>This provides a pipeline for sending data back to the main Activity using <a href="http://developer.android.com/reference/android/app/Activity.html#setResult%28int%29"><code>setResult</code></a>. The setResult method takes an int result value and an Intent that is passed back to the calling Activity.</p>
+
+<pre><code>Intent resultIntent = new Intent();
+// TODO Add extras or a data URI to this intent as appropriate.
+setResult(Activity.RESULT_OK, resultIntent);
+finish();
+</code></pre>
+
+<p>To access the returned data in the calling Activity override <code>onActivityResult</code>. The requestCode corresponds to the integer passed in in the <code>startActivityForResult</code> call, while the resultCode and data Intent are returned from the child Activity.</p>
+
+<pre><code>@Override
+public void onActivityResult(int requestCode, int resultCode, Intent data) {
+  super.onActivityResult(requestCode, resultCode, data);
+  switch(requestCode) {
+    case (MY_CHILD_ACTIVITY) : {
+      if (resultCode == Activity.RESULT_OK) {
+        // TODO Extract the data returned from the child Activity.
+      }
+      break;
+    } 
+  }
+}
+</code></pre>
+
+===UCLA===
+PostId: 947859
+Score: 5
+Accepted: 0
+ViewCount: 4304
+Tags: <android><gps>
+<p>I think the problem is how you define you Intent / PendingIntent. There are two ways to start an Activity using an Intent, and the code you've included looks like a cross between the two.</p>
+
+<p>The standard way of starting an Activity is to use the Intent constructor that takes the current context and the Activity's class and use the <code>getActivity</code> method on <code>PendingIntent</code> to create the PendingIntent:</p>
+
+<pre><code>Intent intent = new Intent(this, ProximityAlert.class);
+PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
+</code></pre>
+
+<p>Alternatively, you can add an <code>IntentReceiver</code> to your Activity in the Manifest, with an IntentFilter that listens for a particular action (like "eu.mauriziopz.gps.ProximityAlert"). However, in that case you need to use <code>PendingIntent.getBroadcast</code> to create the PendingIntent.</p>
+
+<pre><code>Intent intent = new Intent("eu.mauriziopz.gps.ProximityAlert");
+PendingIntent pIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+</code></pre>
+
+<p>In all cases you need to make sure you've got the correct permissions for location-based services defined in your manifest:</p>
+
+<pre><code>&lt;uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/&gt;
+&lt;uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/&gt;
+&lt;uses-permission android:name="android.permission.INTERNET"/&gt;
+</code></pre>
+
+<p><hr /></p>
+
+<p>Also, rather than using the string "gps", you might consider using the static constant <code>LocationManager.GPS_PROVIDER</code>.</p>
+
+===UCLA===
+PostId: 954997
+Score: 33
+Accepted: 0
+ViewCount: 33611
+Tags: <java><android><alertdialog>
+<p>Take a look at <a href="http://developer.android.com/reference/android/app/Activity.html#onPrepareDialog%28int,%20android.app.Dialog%29">onPrepareDialog</a> method that will be called before dialog is shown. There You can change the required values based on request type.</p>
+
+<p><strong>Example with date picker</strong></p>
+
+<pre><code>@Override
+protected Dialog onCreateDialog(final int id) {
+  switch (id) {
+  case DIALOG_DATE_ID:
+    final Calendar c = Calendar.getInstance();
+    return new DatePickerDialog(this, this, c.get(Calendar.YEAR),
+                                c.get(Calendar.MONTH), 
+                                c.get(Calendar.DAY_OF_MONTH));
+  default:
+    return super.onCreateDialog(id);
+  }
+}
+
+@Override
+protected void onPrepareDialog(final int id, final Dialog dialog) {
+  switch (id) {
+  case DIALOG_DATE_ID:
+    //update to current time
+    final Calendar c = Calendar.getInstance();
+    ((DatePickerDialog) dialog).updateDate(c.get(Calendar.YEAR), 
+                                           c.get(Calendar.MONTH), 
+                                           c.get(Calendar.DAY_OF_MONTH));
+    break;
+  }
+}
+</code></pre>
+
+===UCLA===
+PostId: 958611
+Score: 13
+Accepted: 1
+ViewCount: 32426
+Tags: <android><gps>
+<p>Firstly, in your activity, where you're calling <code>requestLocationUpdates()</code>, the second argument is the minimum time, not the scheduled time. You're currently asking for an update AT MOST every 2 seconds. It won't actually report anything until it can... sometimes it takes a little while.</p>
+
+<p>If your GPS is unresponsive/slow elsewhere as well (like in Maps) try restarting the phone (some people claim you have to turn off the phone then pull out the battery to completely de-energized the GPS radio). Hopefully this will bring it back up to it's normally responsive state.</p>
+
+<p>Also, it shouldn't matter, but you said you were using the 1.5 SDK, but you didn't mention if you were compiling against it (as opposed to 1.1). I only bring this up because the GPS works better/faster in Cupcake, so I was wondering what your phone was actually running.</p>
+
+<p><strong>UPDATE:</strong></p>
+
+<p>I wrote up a little test on my own to see if I could duplicate your problem. It consists of just three user-generated files and I tested it with SDK 1.1 and 1.5</p>
+
+<p>In the main Activity (I simply used <code>Main.java</code>):</p>
+
+<pre><code>package org.example.LocationTest;
+
+import android.app.Activity;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.TextView;
+
+public class Main extends Activity implements LocationListener{
+    private LocationManager myManager;
+    private TextView tv;
+
+
+    /********************************************************************** 
+     * Activity overrides below 
+     **********************************************************************/
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        // get a handle to our TextView so we can write to it later
+        tv = (TextView) findViewById(R.id.TextView01);
+
+        // set up the LocationManager
+        myManager = (LocationManager) getSystemService(LOCATION_SERVICE);   
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopListening();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        stopListening();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        startListening();
+        super.onResume();
+    }
+
+
+
+    /**********************************************************************
+     * helpers for starting/stopping monitoring of GPS changes below 
+     **********************************************************************/
+    private void startListening() {
+        myManager.requestLocationUpdates(
+            LocationManager.GPS_PROVIDER, 
+            0, 
+            0, 
+            this
+        );
+    }
+
+    private void stopListening() {
+        if (myManager != null)
+            myManager.removeUpdates(this);
+    }
+
+
+
+
+    /**********************************************************************
+     * LocationListener overrides below 
+     **********************************************************************/
+    @Override
+    public void onLocationChanged(Location location) {
+        // we got new location info. lets display it in the textview
+        String s = "";
+        s += "Time: "        + location.getTime() + "\n";
+        s += "\tLatitude:  " + location.getLatitude()  + "\n";
+        s += "\tLongitude: " + location.getLongitude() + "\n";
+        s += "\tAccuracy:  " + location.getAccuracy()  + "\n";
+
+        tv.setText(s);
+    }    
+
+    @Override
+    public void onProviderDisabled(String provider) {}    
+
+    @Override
+    public void onProviderEnabled(String provider) {}    
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+}
+</code></pre>
+
+<p>In your "main" layout file (I used <code>main.xml</code>):</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" 
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"&gt;
+    &lt;TextView 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:id="@+id/TextView01"
+        android:text="Waiting for location information..." 
+    /&gt;
+&lt;/LinearLayout&gt;
+</code></pre>
+
+<p>Then, in your <code>AndroidManifest.xml</code>:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.example.LocationTest"
+    android:versionCode="1"
+    android:versionName="1.0"&gt;
+    &lt;application 
+        android:icon="@drawable/icon" 
+        android:label="@string/app_name"&gt;
+        &lt;activity 
+            android:name=".Main"
+            android:label="@string/app_name"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.MAIN" /&gt;
+                &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+    &lt;/application&gt;
+    &lt;uses-sdk android:minSdkVersion="3" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /&gt;
+&lt;/manifest&gt; 
+</code></pre>
+
+<p>You should be able to compile/run this just fine. If, using this, you still can't get a fix it's not a software problem. You either have a bad GPS or it just can't get a lock on any satellites.</p>
+
+<p>You can download the source <a href="http://fixedd.com/project_files/AndroidLocationTest.tar.gz">here</a>.</p>
+
+===UCLA===
+PostId: 962283
+Score: 6
+Accepted: 1
+ViewCount: 2881
+Tags: <android><audio>
+<pre><code>package com.benmccann.android.hello;
+
+import java.io.File;
+import java.io.IOException;
+
+import android.media.MediaRecorder;
+import android.os.Environment;
+
+/**
+ * @author &lt;a href="http://www.benmccann.com"&gt;Ben McCann&lt;/a&gt;
+ */
+public class AudioRecorder {
+
+  final MediaRecorder recorder = new MediaRecorder();
+  final String path;
+
+  /**
+   * Creates a new audio recording at the given path (relative to root of SD card).
+   */
+  public AudioRecorder(String path) {
+    this.path = sanitizePath(path);
+  }
+
+  private String sanitizePath(String path) {
+    if (!path.startsWith("/")) {
+      path = "/" + path;
+    }
+    if (!path.contains(".")) {
+      path += ".3gp";
+    }
+    return Environment.getExternalStorageDirectory().getAbsolutePath() + path;
+  }
+
+  /**
+   * Starts a new recording.
+   */
+  public void start() throws IOException {
+    String state = android.os.Environment.getExternalStorageState();
+    if(!state.equals(android.os.Environment.MEDIA_MOUNTED))  {
+        throw new IOException("SD Card is not mounted.  It is " + state + ".");
+    }
+
+    // make sure the directory we plan to store the recording in exists
+    File directory = new File(path).getParentFile();
+    if (!directory.exists() &amp;&amp; !directory.mkdirs()) {
+      throw new IOException("Path to file could not be created.");
+    }
+
+    recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+    recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+    recorder.setOutputFile(path);
+    recorder.prepare();
+    recorder.start();
+  }
+
+  /**
+   * Stops a recording that has been previously started.
+   */
+  public void stop() throws IOException {
+    recorder.stop();
+    recorder.release();
+  }
+}
+</code></pre>
+
+<p>From <a href="http://www.benmccann.com/dev-blog/android-audio-recording-tutorial/" rel="nofollow">http://www.benmccann.com/dev-blog/android-audio-recording-tutorial/</a></p>
+
+===UCLA===
+PostId: 978512
+Score: 1
+Accepted: 1
+ViewCount: 3940
+Tags: <android><event-handling><surfaceview>
+<p>I'm not sure if this is the answer you're looking for, but it might be worth trying.</p>
+
+<p>The <code>OnKeyListener</code> for a specific View will only be called if the key is pressed while that View has focus. You could try ensuring that it has focus with:</p>
+
+<pre><code>videoPreview.requestFocus();
+</code></pre>
+
+<p>or put the <code>OnKeyListener</code> on the layout (eg <code>LinearLayout</code>) that contains everything else (including the <code>CaptureView</code>). Something like:</p>
+
+<pre><code>LinearLayout ll = (LinearLayout) findViewById(R.id.VideoContainer);
+ll.setOnClickListener(new OnKeyListener(){
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+        // ...
+    }
+);
+</code></pre>
+
+===UCLA===
+PostId: 986554
+Score: 2
+Accepted: 0
+ViewCount: 102354
+Tags: <android><sms>
+<p>I couldn't get it to work using dmyung's solution, it gave me an exception when getting either the message id or thread id.</p>
+
+<p>In the end, I've used the following method to get the thread id:</p>
+
+<pre><code>private long getThreadId(Context context) {
+ long threadId = 0;
+
+ String SMS_READ_COLUMN = "read";
+    String WHERE_CONDITION = SMS_READ_COLUMN + " = 0";
+    String SORT_ORDER = "date DESC";
+    int count = 0;
+
+    Cursor cursor = context.getContentResolver().query(
+                    SMS_INBOX_CONTENT_URI,
+          new String[] { "_id", "thread_id", "address", "person", "date", "body" },
+                    WHERE_CONDITION,
+                    null,
+                    SORT_ORDER);
+
+    if (cursor != null) {
+            try {
+                count = cursor.getCount();
+                if (count &gt; 0) {
+                    cursor.moveToFirst();
+                    threadId = cursor.getLong(1);                              
+                }
+            } finally {
+                    cursor.close();
+            }
+    }
+
+
+ return threadId;
+}
+</code></pre>
+
+<p>Then I could delete it. However, as Doug said, the notification is still there, even the message is displayed when opening the notification panel. Only when tapping the message I could actually see that it's empty. </p>
+
+<p>So I guess the only way this would work would be to actually somehow intercept the SMS before it's delivered to the system, before it even reaches the inbox. However, I highly doubt this is doable. Please correct me if I'm wrong.</p>
+
+===UCLA===
+PostId: 986669
+Score: 0
+Accepted: 1
+ViewCount: 4391
+Tags: <android><user-interface><timer>
+<p>After updating each control call <code>control.Refresh()</code> or <code>form.Refresh()</code> - this forces the controls to be redrawn immediately.</p>
+
+<p>In your case:</p>
+
+<pre><code>txtTimer.setText(strTime); // the text doesn't change!
+txtTimer.Refresh(); 
+</code></pre>
+
+===UCLA===
+PostId: 988443
+Score: 2
+Accepted: 0
+ViewCount: 3161
+Tags: <android>
+<p>One way of passing simple data between activities/services of a specific app is to use the SharedPreferences functionality of android.</p>
+
+<p>This may not be the most elegant code to get the job done, but I routinely create a static "utility" class in my Android projects to allow for 1 line get and set of simple data types via shared preferences</p>
+
+<pre><code>private static final String PREFERENCE_FILE_NAME = "com.snctln.util.test.SharedPreferencesFile";
+private static final String BOOL_VALUE_ONE = "bValueOne";
+
+public static boolean getBooleanValue1(Context context)
+{
+    SharedPreferences prefs = context.getSharedPreferences(PREFERENCE_FILE_NAME, Context.MODE_PRIVATE);
+    return prefs.getBoolean(BOOL_VALUE_ONE, true); // return true if the value does not exist
+}
+
+public static void setBooleanValue1(Context context, int appWidgetId, boolean actualvalue)
+{
+    SharedPreferences.Editor prefs = context.getSharedPreferences(PREFERENCE_FILE_NAME, Context.MODE_PRIVATE).edit();
+    prefs.putBoolean(BOOL_VALUE_ONE, actualvalue);
+    prefs.commit();
+}
+</code></pre>
+
+===UCLA===
+PostId: 989725
+Score: 6
+Accepted: 1
+ViewCount: 6298
+Tags: <android><camera>
+<p>In your example you need to return <code>true</code> to let it know you "consumed" the event. Like this:</p>
+
+<pre><code>videoPreview.setOnKeyListener(new OnKeyListener(){
+    public boolean onKey(View v, int keyCode, KeyEvent event){
+        if(event.getAction() == KeyEvent.ACTION_DOWN) {
+            switch(keyCode) {
+                case KeyEvent.KEYCODE_CAMERA:
+                    //videoPreview.onCapture(settings);
+                    onCaptureButton();
+                    /* ... */
+                    return true;
+            }
+        }
+        return false;
+    }
+});
+</code></pre>
+
+<p>It will also only work if the <code>videoPreview</code> (or a child element) has focus. So you could either set it to have focus by default:</p>
+
+<pre><code>@Override
+public void onResume() {
+    /* ... */
+    videoPreview.requestFocus();
+    super.onResume();
+}
+</code></pre>
+
+<p>or (prefered) put the listener on the top-level element (eg. a <code>LinearLayout</code>, <code>RelativeLayout</code>, etc).</p>
+
+===UCLA===
+PostId: 990944
+Score: 39
+Accepted: 1
+ViewCount: 52034
+Tags: <android><service>
+<p>Unfortunately right now there is no reliable way to receive a broadcast event after your applicaiton has been installed, the <a href="http://developer.android.com/reference/android/content/Intent.html#ACTION%5FPACKAGE%5FADDED">ACTION_PACKAGE_ADDED</a> Intent does not broadcast to the newly installed package.</p>
+
+<p>You will have to have a broadcast receiver class as well as your service in order to receive the <a href="http://developer.android.com/reference/android/content/Intent.html#ACTION%5FBOOT%5FCOMPLETED">ACTION_BOOT_COMPLETED</a> event.  I would also recommend adding the <a href="http://developer.android.com/reference/android/content/Intent.html#ACTION%5FUSER%5FPRESENT">ACTION_USER_PRESENT</a> intent to be caught by that broadcast receiver, this requires Android 1.5 (minSDK=3), this will call your broadcast receiver whenever the user unlocks their phone.  The last thing that you can do to try to keep your service running without having it easily be shut down automatically is to call <a href="http://developer.android.com/reference/android/app/Service.html#setForeground%28boolean%29">Service.setForeground()</a> in your service onCreate to tell Android that your service shouldn't be stopped, this was added mainly for mp3 player type services that have to keep running but can be used by any service.</p>
+
+<p>Make sure you add the proper permissions for the boot_complete and user_present events in you manifest.</p>
+
+<p>Here is a simple class that you can use as a broadcast receiver for the events.</p>
+
+<pre><code>package com.snctln.util.WeatherStatus;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+
+public class WeatherStatusServiceReceiver extends BroadcastReceiver
+{
+    @Override
+    public void onReceive(Context context, Intent intent)
+    {
+     if(intent.getAction() != null)
+     {
+      if(intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED) ||
+          intent.getAction().equals(Intent.ACTION_USER_PRESENT))
+      {
+       context.startService(new Intent(context, WeatherStatusService.class));
+      }
+     }
+    }
+};
+</code></pre>
+
+<p>Good luck.</p>
+
+===UCLA===
+PostId: 991120
+Score: 37
+Accepted: 1
+ViewCount: 8242
+Tags: <android>
+<p>Yes, you could use the signature for that. If you use a debug key to sign your app during development and a release key when uploading your app to the market you can check for the signature that the app was signed with and based on that use test or production server.
+Here is a small code piece to read the signature of your app:</p>
+
+<pre><code>    try {
+        PackageManager manager = context.getPackageManager(); 
+        PackageInfo appInfo = manager.getPackageInfo(
+            YOUR_PACKAGE_NAME, PackageManager.GET_SIGNATURES);
+
+        // Now test if the first signature equals your debug key.
+        boolean shouldUseTestServer = 
+            appInfo.signatures[0].toCharsString().equals(YOUR_DEBUG_KEY);
+
+    } catch (NameNotFoundException e) {
+        // Expected exception that occurs if the package is not present.
+    }
+</code></pre>
+
+<p>YOUR_PACKAGE_NAME must be something like 'com.wsl.CardioTrainer'. It must be the package name you used in your AndroidManifest.xml.
+Good Luck</p>
+
+<p>mark</p>
+
+===UCLA===
+PostId: 991429
+Score: 3
+Accepted: 1
+ViewCount: 3513
+Tags: <android><android-1.5-cupcake>
+<p><strong>Update: As suggested by Steve Pomeroy, <a href="http://stackoverflow.com/q/2131948/98401">this</a> might be a better way to do it.</strong></p>
+
+<hr>
+
+<p>You can use a <a href="http://developer.android.com/reference/android/os/PowerManager.html" rel="nofollow"><code>WakeLock</code></a> that requires the following permission:</p>
+
+<pre><code>&lt;uses-permission android:name="android.permission.WAKE_LOCK" /&gt;</code></pre>
+
+<p>Here is how you aquire and release a <a href="http://developer.android.com/reference/android/os/PowerManager.html" rel="nofollow"><code>WakeLock</code></a>:</p>
+
+<pre><code>PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Tag");
+wl.acquire();
+// wake locked...
+wl.release();
+</code></pre>
+
+<p>Depending on your requirements you might be able to use a different type of <a href="http://developer.android.com/reference/android/os/PowerManager.html" rel="nofollow"><code>WakeLock</code></a>.</p>
+
+===UCLA===
+PostId: 992060
+Score: 56
+Accepted: 1
+ViewCount: 58713
+Tags: <android><fullscreen><title>
+<p>The way I handle this in my Android games is to call the following line in the onCreate() of my Activity</p>
+
+<pre><code>requestWindowFeature(Window.FEATURE_NO_TITLE);
+</code></pre>
+
+<p>I can then turn the full screen capability off and on using the following code in my activity class (usually called from a menu option)  (the m_contentView variable is the view from findViewById() using the id that you used when calling setContentView() in your on create)</p>
+
+<pre><code>private void updateFullscreenStatus(boolean bUseFullscreen)
+{   
+   if(bUseFullscreen)
+   {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+    }
+    else
+    {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    m_contentView.requestLayout();
+}
+</code></pre>
+
+<p>I use this technique in all of my games without problem.</p>
+
+<p>Why do you say</p>
+
+<blockquote>
+  <p>requestWindowFeature(Window.FEATURE_NO_TITLE);
+  is not an option of course</p>
+</blockquote>
+
+<p>?</p>
+
+<p>::EDIT::</p>
+
+<p>Well if you are trying to dynamically show and hide it during the lifetime of the activity I am not sure if you can do that with the official Window Title due to the note that has been mentioned about window features needing to be set before setContentView() is called (<a href="http://developer.android.com/reference/android/view/Window.html#requestFeature%28int%29">link</a>)</p>
+
+<p>One thing that you could do is implement your own title bar and dynamically show and hide that... I put together this example that should set you o nthe right track</p>
+
+<p>Here is the layout file</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:fadingEdgeLength="0sp"
+    &gt;
+
+    &lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/myTitleBarLayout" 
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        &gt;
+
+        &lt;TextView
+            android:id="@+id/myTitleBarTextView"
+            android:layout_width="fill_parent" 
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:paddingTop="4dip"
+            android:paddingBottom="4dip"
+            android:paddingLeft="6dip"
+            android:textStyle="bold"
+            android:shadowColor="#BB000000"
+            android:shadowRadius="3.0"
+            android:shadowDy=".25"
+
+        /&gt;
+
+        &lt;View
+            android:layout_width="fill_parent"
+            android:layout_height="1dip"
+            android:background="#CCEEEEEE"
+            android:padding="10dip"
+        /&gt;
+    &lt;/LinearLayout&gt;
+
+    &lt;ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        &gt;
+
+        &lt;!-- Insert your regular layout stuff here --&gt;
+
+        &lt;Button android:id="@+id/toggle_title_button" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:text="Toggle Title" 
+        /&gt;
+    &lt;/ScrollView&gt;
+&lt;/LinearLayout&gt;
+</code></pre>
+
+<p>And here is the code for the main activity that will allow you to toggle our custom title bar on and off</p>
+
+<pre><code>package com.snctln.test.HelloGridView;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public class HelloGridView extends Activity
+{
+    public void onCreate(Bundle savedInstanceState)
+    {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        TextView tv = (TextView)this.findViewById(R.id.myTitleBarTextView);
+        tv.setBackgroundColor(0xFF848284);
+        tv.setTextColor(0xFFFFFFFF);
+
+        Button toggleTitleButton = (Button)this.findViewById(R.id.toggle_title_button);
+
+        toggleTitleButton.setOnClickListener( new OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    LinearLayout ll = (LinearLayout)findViewById(R.id.myTitleBarLayout);
+
+                    if(ll.getVisibility() == View.GONE)
+                    {
+                        ll.setVisibility(View.VISIBLE);
+                    }
+                    else
+                    {
+                        ll.setVisibility(View.GONE);
+                    }
+                }
+            });
+    }
+}
+</code></pre>
+
+<p>It doesn't look perfect, but you can always play with the layout some more to do that.</p>
+
+<p><img src="http://i39.tinypic.com/120sfp1.png" alt="alt text"></p>
+
+<p>My other thought is if you just want to hide everything to show a progress bar why not use the <a href="http://developer.android.com/reference/android/app/ProgressDialog.html">ProgressDialog</a>?</p>
+
+<p>This class is pretty easy to use...</p>
+
+<pre><code>progressDlg = ProgressDialog.show(context, getString(R.string.progress_dialog_title_prepare), getString(R.string.progress_dialog_body_prepare));
+
+// do long running operation
+
+if(operationFailed)
+{
+    progressDlg.cancel();
+}
+else
+{
+    progressDlg.dismiss();
+}
+</code></pre>
+
+===UCLA===
+PostId: 992557
+Score: 5
+Accepted: 1
+ViewCount: 8554
+Tags: <java><android><android-service><android-wake-lock><android-1.5-cupcake>
+<p>Aren't you missing the line</p>
+
+<pre><code>    PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Tag");
+</code></pre>
+
+<p>in onDestroy()? It is a local variable in onCreate(), but it is not declared in onDestroy() at all.</p>
+
+<p>Or, more probable, you may want to make it a field of class WakeLockService instead of a local variable.</p>
+
+===UCLA===
+PostId: 993641
+Score: 7
+Accepted: 1
+ViewCount: 7369
+Tags: <android><android-wake-lock><powermanager>
+<p>Are you receiving this force close when running the code in the emulator on an actual device?</p>
+
+<p>Have you set breakpoints in eclipse to verify that the getSystemService() call is what is causing the problem?</p>
+
+<p>In eclipse when the force close occurs does LogCat say anything about it?</p>
+
+<p>Did you set</p>
+
+<pre><code>&lt;uses-permission android:name="android.permission.WAKE_LOCK" /&gt;
+</code></pre>
+
+<p>in the manifest?</p>
+
+<p>You could also try defining pm as final:</p>
+
+<pre><code>final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+</code></pre>
+
+<p>Let me know if any of this helps...</p>
+
+===UCLA===
+PostId: 997495
+Score: 44
+Accepted: 1
+ViewCount: 141725
+Tags: <java><android><ssl>
+<p>I'm making a guess, but if you want an actual handshake to occur, you have to let android know of your certificate.  If you want to just accept no matter what, then use this pseudo-code to get what you need with the Apache HTTP Client:</p>
+
+<pre><code>SchemeRegistry schemeRegistry = new SchemeRegistry ();
+
+schemeRegistry.register (new Scheme ("http",
+    PlainSocketFactory.getSocketFactory (), 80));
+schemeRegistry.register (new Scheme ("https",
+    new CustomSSLSocketFactory (), 443));
+
+ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager (
+    params, schemeRegistry);
+
+
+return new DefaultHttpClient (cm, params);
+</code></pre>
+
+<p>CustomSSLSocketFactory:</p>
+
+<pre><code>public class CustomSSLSocketFactory extends org.apache.http.conn.ssl.SSLSocketFactory
+{
+private SSLSocketFactory FACTORY = HttpsURLConnection.getDefaultSSLSocketFactory ();
+
+public CustomSSLSocketFactory ()
+    {
+    super(null);
+    try
+        {
+        SSLContext context = SSLContext.getInstance ("TLS");
+        TrustManager[] tm = new TrustManager[] { new FullX509TrustManager () };
+        context.init (null, tm, new SecureRandom ());
+
+        FACTORY = context.getSocketFactory ();
+        }
+    catch (Exception e)
+        {
+        e.printStackTrace();
+        }
+    }
+
+public Socket createSocket() throws IOException
+{
+    return FACTORY.createSocket();
+}
+
+ // TODO: add other methods like createSocket() and getDefaultCipherSuites().
+ // Hint: they all just make a call to member FACTORY 
+}
+</code></pre>
+
+<p>FullX509TrustManager is a class that implements javax.net.ssl.X509TrustManager, yet none of the methods actually perform any work, get a sample <a href="http://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html#d4e537">here</a>.</p>
+
+<p>Good Luck!</p>
+
+===UCLA===
+PostId: 999114
+Score: 2
+Accepted: 0
+ViewCount: 8294
+Tags: <android>
+<p>Here's some handy code to sleep until audio is done playing:</p>
+
+<pre><code>   AudioManager manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+   while(manager.isMusicActive())
+    {
+        Log.d("music", "music is active");
+        try
+        {
+            Thread.sleep(500);
+        }
+        catch (InterruptedException e)
+        {
+            Log.e("music", "interrupted waiting for music to stop");
+        }
+        Log.d("music", "done playing music");
+    }
+</code></pre>
+
+===UCLA===
+PostId: 1000205
+Score: 73
+Accepted: 0
+ViewCount: 141725
+Tags: <java><android><ssl>
+<p>This is what I am doing. It simply doesn't check the certificate anymore.</p>
+
+<pre><code>// always verify the host - dont check for certificate
+final static HostnameVerifier DO_NOT_VERIFY = new HostnameVerifier() {
+ public boolean verify(String hostname, SSLSession session) {
+  return true;
+ }
+};
+
+/**
+ * Trust every server - dont check for any certificate
+ */
+private static void trustAllHosts() {
+ // Create a trust manager that does not validate certificate chains
+ TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+  public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+   return new java.security.cert.X509Certificate[] {};
+  }
+
+  public void checkClientTrusted(X509Certificate[] chain,
+    String authType) throws CertificateException {
+  }
+
+  public void checkServerTrusted(X509Certificate[] chain,
+    String authType) throws CertificateException {
+  }
+ } };
+
+ // Install the all-trusting trust manager
+ try {
+  SSLContext sc = SSLContext.getInstance("TLS");
+  sc.init(null, trustAllCerts, new java.security.SecureRandom());
+  HttpsURLConnection
+    .setDefaultSSLSocketFactory(sc.getSocketFactory());
+ } catch (Exception e) {
+  e.printStackTrace();
+ }
+}
+</code></pre>
+
+<p>and</p>
+
+<pre><code> HttpURLConnection http = null;
+
+ if (url.getProtocol().toLowerCase().equals("https")) {
+     trustAllHosts();
+  HttpsURLConnection https = (HttpsURLConnection) url.openConnection();
+  https.setHostnameVerifier(DO_NOT_VERIFY);
+  http = https;
+ } else {
+  http = (HttpURLConnection) url.openConnection();
+ }
+</code></pre>
+
+===UCLA===
+PostId: 1001953
+Score: 4
+Accepted: 1
+ViewCount: 2113
+Tags: <java><android><expandablelistview>
+<p>According to the <a href="http://developer.android.com/reference/android/app/ExpandableListActivity.html" rel="nofollow">documentation</a> this task should not be too hard.</p>
+
+<p>the first thing that you will have to do is create a new xml file to hold your custom layout.  The file should be saved in your res/layout folder and be named something like "my_custom_expandable_list_view_layout.xml", it should look something like this:</p>
+
+<pre><code> &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+ &lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+         android:orientation="vertical"
+         android:layout_width="fill_parent" 
+         android:layout_height="fill_parent"&gt;
+
+     &lt;ExpandableListView android:id="@id/android:list"
+               android:layout_width="fill_parent" 
+               android:layout_height="fill_parent"
+               android:layout_weight="1"/&gt;
+
+     &lt;Button android:id="@id/my_button_id"
+               android:layout_width="fill_parent" 
+               android:layout_height="wrap_content"
+               android:text="Click Me"/&gt;
+ &lt;/LinearLayout&gt;
+</code></pre>
+
+<p>The import part of that layout file is that you include an "ExpandableListView" and give it the id of "android"list".</p>
+
+<p>The next thing that you will need to do is let your activity know that you are using a custom layout by calling <a href="http://developer.android.com/reference/android/app/Activity.html#setContentView%28android.view.View%29" rel="nofollow">setContentView()</a> in your activities onCreate().  The call should look something like this</p>
+
+<pre><code>setContentView(R.layout.my_custom_expandable_list_view_layout);
+</code></pre>
+
+<p>At this point you should be able to run you program and see a large button at the bottom of the screen.  In order to do something with this button you will need to access it via a call to <a href="http://developer.android.com/reference/android/app/Activity.html#findViewById%28int%29" rel="nofollow">findViewById()</a> in your Activity like this</p>
+
+<pre><code>Button myButton = (Button)findViewById(R.id.my_button_id);
+</code></pre>
+
+<p>Once you have that myButton object you can add a click listener or whatever else you would like to do.  You can pretty much add anything else you want by just adding new things to the layout file.</p>
+

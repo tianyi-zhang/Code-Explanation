@@ -1,0 +1,11 @@
+: type i d : str : type version_id : int : type created : datetime.datetime : type updated : datetime.datetime : type data : dart.model.datastore.datastoredata
+: type name : str : type engine_name : str : type workflow_datastore_id : str : type host : str : type port : int : type connection_url : str : type s3_artifacts_path : str : type s3_logs_path : str : type state : str : type concurrency : int : type args : dict : type extra_data : dict : type tags : list[str ]
+"load benchmark data from file or hash . first checks database(s ) for hash , then files . returns first match ."
+load benchmark data from file .
+the size of the resulting hash in bytes .
+the internal block size of the hash algorithm in bytes .
+update the hash object with the string arg . repeated calls are equivalent to a single call with the concatenation of all the arguments : ` m.update(a ) ; m.update(b ) ` is equivalent to ` m.update(a+b ) ` .
+"return the digest of the strings passed to the ` update ( ) ` method so far . this is a string of digest_size bytes which may contain non - ascii characters , including null bytes ."
+return a copy ( “ clone ” ) of the hash object . this can be used to efficiently compute the digests of strings that share a common initial substring .
+invoke functions according to the supplied flags
+create a mattermost input channel . needs a couple of settings to properly authenticate and validate messages . : param url : your mattermost team url including /v4 example https://mysite.example.com/api/v4

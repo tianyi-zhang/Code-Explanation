@@ -1,0 +1,11 @@
+I was all in favour of throwing <code>IllegalArgumentException</code> for null parameters, until today, when I noticed the <code>java.util.Objects.requireNonNull</code> method in Java 7
+...with two lists of arguments: <code>"", null</code> and <code>null, ImmutableList.of()</code>
+You can use <code>netstat -rn</code> command which is available on Windows, OSX, Linux, etc platform If a second thread were to continually reset the value of <strong>i</strong> to 0 (by calling <code>slow.setI( 0 )</code>, for example), the <strong>Slow</strong> class could never end its loop
+Note: <code>(-r &gt;&gt; (Integer.SIZE - 1))</code> consists of the sign bit of <code>r</code>, repeated 32 times (thanks to sign extension of the <code>&gt;&gt;</code> operator.) This evaluates to 0 if <code>r</code> is zero or negative, -1 if <code>r</code> is positive
+So subtracting it from <code>q</code> has the effect of adding 1 if <code>records % recordsPerPage &gt; 0</code>. 2.) Iterate through the <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#values%28%29"><code>values -&gt; values()</code></a> of the map:
+1.) Iterate through the <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#keySet%28%29"><code>keys -&gt; keySet()</code></a> of the map:
+1.) Iterate through the <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#keySet%28%29"><code>keys -&gt; keySet()</code></a> of the map:
+2.) Iterate through the <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#values%28%29"><code>values -&gt; values()</code></a> of the map:
+In Map one can Iteration over <code>keys</code> and/or <code>values</code> and/or <code>both (e.g., entrySet)</code> depends on one's interested in_ Like:
+3.) Iterate through the <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#entrySet%28%29"><code>both -&gt; entrySet()</code></a> of the map:
+In Map one can Iteration over <code>keys</code> and/or <code>values</code> and/or <code>both (e.g., entrySet)</code> depends on one's interested in_ Like:
