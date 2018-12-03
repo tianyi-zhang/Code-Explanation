@@ -15,12 +15,10 @@ public class keyword_extraction {
 		@SuppressWarnings("resource")
 		Scanner s = new Scanner(new File("sample.txt")).useDelimiter(System.lineSeparator());
 		ArrayList<String> sentences = new ArrayList<String>();
-		while (s.hasNext()){
-		    sentences.add(s.next());
+		while (s.hasNextLine()){
+		    sentences.add(s.nextLine());
 		}
 		s.close();
-		
-		out.println(sentences.size());
 		
 		// Create Stemmer object to use in the extract method
 		Stemmer stemmer = new Stemmer();
